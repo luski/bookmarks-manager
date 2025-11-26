@@ -22,7 +22,7 @@ The integration uses:
 
 **Method 2: Use prefix**
 - Open Walker
-- Type `b` to exclusively search bookmarks
+- Type `!` to exclusively search bookmarks
 - Select a bookmark and press Enter to open in your default browser
 
 ### 2. Opening Bookmarks
@@ -33,7 +33,7 @@ The integration uses:
 ### 3. Adding New Bookmarks
 
 **From Walker:**
-1. Open Walker and access bookmarks (type `b`)
+1. Open Walker and access bookmarks (type `!`)
 2. Select "Add New Bookmark" (first entry)
 3. Copy a URL to clipboard first (the script reads from `wl-paste`)
 4. Press Enter to add it

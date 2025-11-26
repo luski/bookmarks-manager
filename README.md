@@ -37,11 +37,13 @@ Walker integration is complete! See [WALKER_INTEGRATION.md](WALKER_INTEGRATION.m
 **Quick Start:**
 1. Make sure `elephant` is running
 2. Open Walker (your configured keybind)
-3. Type `b` to search bookmarks exclusively, or just search normally to see bookmarks in results
+3. Type `!` to search bookmarks exclusively, or just search normally to see bookmarks in results
 4. Press Enter on a bookmark to open it in your browser
 5. Select "Add New Bookmark" to add URLs from your clipboard
 
 The integration uses Elephant's Lua menu system to dynamically query the bookmark database and display results in Walker.
+
+**Prefix:** `!` - Type exclamation mark in Walker to show only bookmarks
 
 ## Project Structure
 
