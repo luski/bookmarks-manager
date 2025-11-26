@@ -1,0 +1,25 @@
+{
+  "name": "bookmarks-manager",
+  "version": "1.0.0",
+  "description": "Bookmarks management with Walker launcher integration",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "db:migrate": "tsx src/db/migrate.ts"
+  },
+  "keywords": ["bookmarks", "walker", "hyprland"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/node": "^20.10.6",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.2.2"
+  }
+}
