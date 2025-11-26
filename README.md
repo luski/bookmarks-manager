@@ -32,11 +32,16 @@ npm run dev
 
 ## Walker Integration
 
-Walker is a launcher for Wayland (Hyprland) that can be extended with custom modules.
-Integration will be implemented to allow:
-- Searching bookmarks through Walker
-- Quick access to bookmarks via launcher
-- Adding new bookmarks from clipboard
+Walker integration is complete! See [WALKER_INTEGRATION.md](WALKER_INTEGRATION.md) for detailed usage instructions.
+
+**Quick Start:**
+1. Make sure `elephant` is running
+2. Open Walker (your configured keybind)
+3. Type `b` to search bookmarks exclusively, or just search normally to see bookmarks in results
+4. Press Enter on a bookmark to open it in your browser
+5. Select "Add New Bookmark" to add URLs from your clipboard
+
+The integration uses Elephant's Lua menu system to dynamically query the bookmark database and display results in Walker.
 
 ## Project Structure
 
@@ -60,7 +65,10 @@ Integration will be implemented to allow:
 - ✅ TypeScript backend with type safety
 - ✅ CRUD operations for bookmarks
 - ✅ Full-text search across title, URL, description, and tags
-- 🚧 Walker launcher integration (next step)
+- ✅ Walker launcher integration via Elephant menus
+- ✅ Command-line interface for bookmark management
+- ✅ Browser URL opening with xdg-open
+- ✅ Quick-add from clipboard
 
 ## Database Schema
 

@@ -1,60 +1,124 @@
 # Walker Integration Guide
 
-## About Walker
+## Setup Complete! ✅
 
-Walker is a fast application launcher for Wayland/Hyprland written in Go. It supports custom modules that can be integrated to extend its functionality.
+The bookmarks manager is now integrated with Walker launcher using Elephant menus.
 
-Repository: https://github.com/abenz1267/walker
+## How It Works
 
-## Integration Approaches
+The integration uses:
+- **Elephant Lua Menu** (`~/.config/elephant/menus/bookmarks.lua`) - Provides dynamic bookmark listing
+- **CLI Tool** (`dist/cli/bookmarks-cli.js`) - Handles database operations
+- **Walker Config** - Configured to show bookmarks as a provider
 
-### Option 1: Custom Script Module
+## Usage
 
-Walker can execute custom scripts and display their output. We'll create a script that:
-1. Queries the SQLite database for bookmarks
-2. Outputs results in Walker's expected format
-3. Handles user selection to open URLs
+### 1. Accessing Bookmarks in Walker
 
-### Option 2: Plugin/Module (if supported)
+**Method 1: Show in default search**
+- Open Walker (your configured keybind)
+- Bookmarks will appear in the default search results
+- Type to filter bookmarks by title, URL, description, or tags
 
-Check Walker's plugin API to create a native module for bookmarks.
+**Method 2: Use prefix**
+- Open Walker
+- Type `b` to exclusively search bookmarks
+- Select a bookmark and press Enter to open in your default browser
 
-## Implementation Plan
+### 2. Opening Bookmarks
 
-1. **Create a Walker-compatible script** (`src/walker/cli.ts`)
-   - Already created: outputs JSON for search/list commands
-   - Needs Walker-specific formatting
+- Navigate to any bookmark in Walker
+- Press **Enter** to open the URL in your default browser (via `xdg-open`)
 
-2. **Configure Walker** to use the bookmarks script
-   - Add to Walker's config file
-   - Map keybindings
+### 3. Adding New Bookmarks
 
-3. **Add URL opening functionality**
-   - Detect default browser (Hyprland)
-   - Open selected bookmark URL
+**From Walker:**
+1. Open Walker and access bookmarks (type `b`)
+2. Select "Add New Bookmark" (first entry)
+3. Copy a URL to clipboard first (the script reads from `wl-paste`)
+4. Press Enter to add it
 
-4. **Add quick-add feature**
-   - Read from clipboard
-   - Parse URL and title
-   - Store in database
+**From Command Line:**
+```bash
+cd /home/lgo/projects/private/bookmarks
+npm run bookmarks add "https://example.com" "Example Site" "Description" "tags"
+```
+
+### 4. Deleting Bookmarks
+
+- In Walker, navigate to a bookmark
+- Look for available actions (check Walker's action hints)
+- Use the delete action if available
+
+### 5. Managing Bookmarks via CLI
+
+```bash
+cd /home/lgo/projects/private/bookmarks
+
+# List all bookmarks
+npm run bookmarks list
+
+# Search bookmarks
+npm run bookmarks search "query"
+
+# Add bookmark
+npm run bookmarks add "URL" "Title" "Description" "tags"
+
+# Delete bookmark by ID
+npm run bookmarks delete 1
+```
+
+## Configuration
+
+### Walker Config Location
+`~/.config/walker/config.toml`
+
+### Elephant Menu Location
+`~/.config/elephant/menus/bookmarks.lua`
+
+### Database Location
+`/home/lgo/projects/private/bookmarks/bookmarks.db`
+
+## Customization
+
+### Change the Prefix
+Edit `~/.config/walker/config.toml`:
+```toml
+[[providers.prefixes]]
+prefix = "your-prefix"  # Change "b" to whatever you want
+provider = "menus:bookmarks"
+```
+
+### Modify Menu Behavior
+Edit `~/.config/elephant/menus/bookmarks.lua` to:
+- Change icons
+- Add more actions
+- Customize the "Add Bookmark" functionality
+- Modify display format
+
+## Troubleshooting
+
+### Bookmarks don't show up in Walker
+1. Make sure elephant is running: `pgrep elephant`
+2. Restart elephant: `killall elephant && elephant &`
+3. Check the menu file exists: `ls ~/.config/elephant/menus/bookmarks.lua`
+4. Test the CLI: `node /home/lgo/projects/private/bookmarks/dist/cli/bookmarks-cli.js list`
+
+### Can't open URLs
+- Check your default browser: `xdg-settings get default-web-browser`
+- Set if needed: `xdg-settings set default-web-browser firefox.desktop`
+
+### "Add Bookmark" doesn't work
+- Make sure `wl-paste` is installed (for Wayland clipboard)
+- Copy a URL before trying to add
+- Check notifications for error messages
 
 ## Next Steps
 
-To integrate with Walker, you'll need to:
+Consider adding:
+- Browser extension to quick-add bookmarks
+- Bookmark categories/folders
+- Import from browser bookmarks
+- Bookmark tags for better organization
+- Favicon support
 
-1. Check Walker's configuration format (usually in `~/.config/walker/config.json`)
-2. Add a custom module pointing to our CLI script
-3. Build the TypeScript and make the CLI executable
-4. Test the integration with Walker
-
-Example Walker config snippet (may vary based on version):
-```json
-{
-  "modules": {
-    "bookmarks": {
-      "cmd": "/path/to/bookmarks/dist/walker/cli.js search",
-      "placeholder": "Search bookmarks..."
-    }
-  }
-}
-```

@@ -5,10 +5,11 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/cli/bookmarks-cli.js",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "db:migrate": "tsx src/db/migrate.ts"
+    "db:migrate": "tsx src/db/migrate.ts",
+    "bookmarks": "tsx src/cli/bookmarks-cli.ts"
   },
   "keywords": ["bookmarks", "walker", "hyprland"],
   "author": "",
