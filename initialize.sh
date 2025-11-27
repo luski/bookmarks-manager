@@ -35,7 +35,19 @@ fi
 # Check if Node.js is available
 if ! command -v node &> /dev/null; then
     echo -e "${RED}✗ Error: Node.js is not installed.${NC}"
-    echo "  Please install Node.js first (v18 or later)"
+    echo "  Please install Node.js 22.5.0 or later (required for native SQLite support)"
+    exit 1
+fi
+
+# Check Node.js version
+NODE_VERSION=$(node --version | sed 's/v//')
+REQUIRED_VERSION="22.5.0"
+
+if ! printf '%s\n%s\n' "$REQUIRED_VERSION" "$NODE_VERSION" | sort -V -C; then
+    echo -e "${RED}✗ Error: Node.js version $NODE_VERSION is too old.${NC}"
+    echo "  This project requires Node.js $REQUIRED_VERSION or later for native SQLite support."
+    echo "  Current version: $NODE_VERSION"
+    echo "  Please upgrade Node.js: https://nodejs.org/"
     exit 1
 fi
 

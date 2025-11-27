@@ -4,8 +4,8 @@ A bookmarks management system for Arch Linux with Hyprland integration using Wal
 
 ## Stack
 
-- **Backend**: Node.js + TypeScript
-- **Database**: SQLite3 (better-sqlite3)
+- **Backend**: Node.js 22.5+ with TypeScript
+- **Database**: SQLite3 (native `node:sqlite` module)
 - **Frontend**: Walker launcher integration
 
 ## Quick Start (Fully Automatic)
@@ -75,7 +75,7 @@ The integration uses Elephant's Lua menu system to dynamically query the bookmar
 
 ## Features
 
-- ✅ SQLite database for bookmark storage
+- ✅ SQLite database for bookmark storage (native Node.js SQLite - no dependencies!)
 - ✅ TypeScript backend with type safety
 - ✅ CRUD operations for bookmarks
 - ✅ Full-text search across title, URL, description, and tags
@@ -83,6 +83,7 @@ The integration uses Elephant's Lua menu system to dynamically query the bookmar
 - ✅ Command-line interface for bookmark management
 - ✅ Browser URL opening with xdg-open
 - ✅ Quick-add from clipboard
+- ✅ Favicon support for visual identification
 
 ## Database Schema
 
