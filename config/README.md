@@ -60,10 +60,21 @@ This will:
 3. ✓ Initialize the database
 4. ✓ Build the project
 5. ✓ Process template and install `bookmarks.lua` to Elephant menus directory
-6. ✓ Automatically configure Walker (modifies your config.toml)
+6. ✓ Automatically configure Walker (makes minimal changes only)
 7. ✓ Restart Elephant to load the menu
 
-**This is fully automatic and requires no manual configuration!**
+**This is fully automatic and only adds what's needed for bookmarks!**
+
+#### What Gets Modified in Walker Config
+
+The script makes **minimal, surgical changes** to your Walker configuration:
+
+1. **Adds to default providers:** Only adds `"menus:bookmarks"` to your existing `default = [...]` array
+2. **Adds prefix:** Appends the `!` prefix configuration for exclusive bookmark search
+3. **Preserves everything else:** All your other Walker settings remain unchanged
+4. **Creates backup:** Your original config is backed up before any changes
+
+If you don't have a Walker config, it creates a minimal one with just bookmarks.
 
 ### Manual Setup
 
@@ -74,21 +85,27 @@ mkdir -p ~/.config/elephant/menus
 cp config/bookmarks.lua ~/.config/elephant/menus/bookmarks.lua
 ```
 
-Edit the file and update the project path if your bookmarks project is not in `~/projects/private/bookmarks`.
+Then replace `{{PROJECT_PATH}}` with your actual project path, or use `sed`:
+
+```bash
+sed -i "s|{{PROJECT_PATH}}|$(pwd)|g" ~/.config/elephant/menus/bookmarks.lua
+```
 
 #### 2. Configure Walker
 
-Edit `~/.config/walker/config.toml`:
+Edit `~/.config/walker/config.toml` and make these **minimal additions**:
 
-**Add to default providers:**
+**Add to your existing default providers array:**
 ```toml
 [providers]
 default = [
-  "desktopapplications",
-  "menus:bookmarks",  # Add this line
-  "websearch",
+  # ... your existing providers ...
+  "menus:bookmarks",  # Add only this line
+  # ... your other providers ...
 ]
 ```
+
+**Important:** Don't replace your entire config! Just add `"menus:bookmarks"` to your existing array.
 
 **Add prefix for exclusive bookmark search:**
 ```toml

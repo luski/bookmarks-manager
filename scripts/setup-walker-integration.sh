@@ -55,63 +55,73 @@ echo -e "  ✓ Updated paths to: $PROJECT_ROOT"
 
 # Walker configuration
 WALKER_CONFIG="$HOME/.config/walker/config.toml"
+WALKER_CONFIG_DIR="$HOME/.config/walker"
 
-if [ ! -f "$WALKER_CONFIG" ]; then
-    echo -e "${YELLOW}Walker config not found. Creating default config...${NC}"
-    mkdir -p "$HOME/.config/walker"
-    cat > "$WALKER_CONFIG" << 'EOF'
+mkdir -p "$WALKER_CONFIG_DIR"
+
+# Backup existing config if it exists
+if [ -f "$WALKER_CONFIG" ]; then
+    cp "$WALKER_CONFIG" "$WALKER_CONFIG.backup.$(date +%s)"
+    echo -e "${GREEN}Configuring Walker...${NC}"
+    echo -e "  ✓ Backed up existing Walker config"
+fi
+
+# Check if bookmarks is already configured
+if [ -f "$WALKER_CONFIG" ] && grep -q 'menus:bookmarks' "$WALKER_CONFIG"; then
+    echo -e "  ${YELLOW}⚠${NC}  Bookmarks already configured in Walker"
+else
+    # Check if Walker config exists and has providers section
+    if [ -f "$WALKER_CONFIG" ]; then
+        # Existing config - only add what's needed
+        echo -e "${GREEN}Configuring Walker...${NC}"
+
+        # Add to default providers if section exists
+        if grep -q '^default = \[' "$WALKER_CONFIG"; then
+            # Add bookmarks to the default array
+            sed -i '/^default = \[/,/^\]/ {
+                /^\]/ i\  "menus:bookmarks",
+            }' "$WALKER_CONFIG"
+            echo -e "  ✓ Added bookmarks to existing Walker default providers"
+        elif grep -q '^\[providers\]' "$WALKER_CONFIG"; then
+            # Has [providers] but no default array - add it after [providers]
+            sed -i '/^\[providers\]/a default = [\n  "menus:bookmarks",\n]' "$WALKER_CONFIG"
+            echo -e "  ✓ Added default providers array with bookmarks"
+        else
+            # No providers section at all - append it
+            cat >> "$WALKER_CONFIG" << 'EOF'
+
 [providers]
-max_results = 256
 default = [
-  "desktopapplications",
   "menus:bookmarks",
-  "websearch",
 ]
+EOF
+            echo -e "  ✓ Added providers section with bookmarks"
+        fi
 
-[[providers.prefixes]]
-prefix = "/"
-provider = "providerlist"
-
-[[providers.prefixes]]
-prefix = "."
-provider = "files"
-
-[[providers.prefixes]]
-prefix = ":"
-provider = "symbols"
-
-[[providers.prefixes]]
-prefix = "="
-provider = "calc"
-
-[[providers.prefixes]]
-prefix = "$"
-provider = "clipboard"
+        # Add prefix configuration if not already there
+        if ! grep -q 'provider = "menus:bookmarks"' "$WALKER_CONFIG"; then
+            cat >> "$WALKER_CONFIG" << 'EOF'
 
 [[providers.prefixes]]
 prefix = "!"
 provider = "menus:bookmarks"
 EOF
-    echo -e "  ✓ Created $WALKER_CONFIG"
-else
-    echo -e "${GREEN}Configuring Walker...${NC}"
-
-    # Check if bookmarks is already in default providers
-    if grep -q 'menus:bookmarks' "$WALKER_CONFIG"; then
-        echo -e "  ${YELLOW}⚠${NC}  Bookmarks already configured in Walker"
+            echo -e "  ✓ Added bookmark prefix (!) to Walker"
+        fi
     else
-        echo -e "${YELLOW}Walker config exists. Please manually add the following:${NC}"
-        echo ""
-        echo "1. Add to [providers] default array:"
-        echo '   "menus:bookmarks",'
-        echo ""
-        echo "2. Add prefix configuration:"
-        echo "   [[providers.prefixes]]"
-        echo "   prefix = \"!\""
-        echo "   provider = \"menus:bookmarks\""
-        echo ""
-        echo "Reference configuration in: $CONFIG_DIR/walker-config.toml"
-        echo ""
+        # No config file exists - create minimal one with just bookmarks
+        echo -e "${YELLOW}Walker config not found. Creating minimal config...${NC}"
+        cat > "$WALKER_CONFIG" << 'EOF'
+[providers]
+default = [
+  "menus:bookmarks",
+]
+
+[[providers.prefixes]]
+prefix = "!"
+provider = "menus:bookmarks"
+EOF
+        echo -e "  ✓ Created Walker configuration with bookmarks"
     fi
 fi
 

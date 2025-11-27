@@ -95,73 +95,38 @@ WALKER_CONFIG_DIR="$HOME/.config/walker"
 
 mkdir -p "$WALKER_CONFIG_DIR"
 
-if [ ! -f "$WALKER_CONFIG" ]; then
-    # Create new Walker config with bookmarks
-    echo -e "${YELLOW}  Creating new Walker configuration...${NC}"
-    cat > "$WALKER_CONFIG" << 'EOF'
-[providers]
-max_results = 256
-default = [
-  "desktopapplications",
-  "menus:bookmarks",
-  "websearch",
-]
-
-[[providers.prefixes]]
-prefix = "/"
-provider = "providerlist"
-
-[[providers.prefixes]]
-prefix = "."
-provider = "files"
-
-[[providers.prefixes]]
-prefix = ":"
-provider = "symbols"
-
-[[providers.prefixes]]
-prefix = "="
-provider = "calc"
-
-[[providers.prefixes]]
-prefix = "$"
-provider = "clipboard"
-
-[[providers.prefixes]]
-prefix = "!"
-provider = "menus:bookmarks"
-EOF
-    echo -e "${GREEN}✓${NC} Walker configuration created"
-else
-    # Backup existing config
+# Backup existing config if it exists
+if [ -f "$WALKER_CONFIG" ]; then
     cp "$WALKER_CONFIG" "$WALKER_CONFIG.backup.$(date +%s)"
     echo -e "${GREEN}✓${NC} Backed up existing Walker config"
+fi
 
-    # Check if bookmarks is already configured
-    if grep -q 'menus:bookmarks' "$WALKER_CONFIG"; then
-        echo -e "${YELLOW}  ⚠${NC}  Bookmarks already configured in Walker"
-    else
-        # Add bookmarks to default providers if not already there
-        if grep -q '^\[providers\]' "$WALKER_CONFIG" && grep -q '^default = \[' "$WALKER_CONFIG"; then
-            # Add to existing default array if it doesn't already have bookmarks
-            if ! grep -A 5 '^default = \[' "$WALKER_CONFIG" | grep -q 'menus:bookmarks'; then
-                # Find the default array and add bookmarks before the closing bracket
-                sed -i '/^default = \[/,/^\]/ {
-                    /^\]/ i\  "menus:bookmarks",
-                }' "$WALKER_CONFIG"
-                echo -e "${GREEN}✓${NC} Added bookmarks to Walker default providers"
-            fi
+# Check if bookmarks is already configured
+if [ -f "$WALKER_CONFIG" ] && grep -q 'menus:bookmarks' "$WALKER_CONFIG"; then
+    echo -e "${YELLOW}  ⚠${NC}  Bookmarks already configured in Walker"
+else
+    # Check if Walker config exists and has providers section
+    if [ -f "$WALKER_CONFIG" ]; then
+        # Existing config - only add what's needed
+
+        # Add to default providers if section exists
+        if grep -q '^default = \[' "$WALKER_CONFIG"; then
+            # Add bookmarks to the default array
+            sed -i '/^default = \[/,/^\]/ {
+                /^\]/ i\  "menus:bookmarks",
+            }' "$WALKER_CONFIG"
+            echo -e "${GREEN}✓${NC} Added bookmarks to existing Walker default providers"
+        elif grep -q '^\[providers\]' "$WALKER_CONFIG"; then
+            # Has [providers] but no default array - add it after [providers]
+            sed -i '/^\[providers\]/a default = [\n  "menus:bookmarks",\n]' "$WALKER_CONFIG"
+            echo -e "${GREEN}✓${NC} Added default providers array with bookmarks"
         else
-            # Add providers section if it doesn't exist
-            echo "" >> "$WALKER_CONFIG"
+            # No providers section at all - append it
             cat >> "$WALKER_CONFIG" << 'EOF'
 
 [providers]
-max_results = 256
 default = [
-  "desktopapplications",
   "menus:bookmarks",
-  "websearch",
 ]
 EOF
             echo -e "${GREEN}✓${NC} Added providers section with bookmarks"
@@ -169,7 +134,6 @@ EOF
 
         # Add prefix configuration if not already there
         if ! grep -q 'provider = "menus:bookmarks"' "$WALKER_CONFIG"; then
-            echo "" >> "$WALKER_CONFIG"
             cat >> "$WALKER_CONFIG" << 'EOF'
 
 [[providers.prefixes]]
@@ -178,6 +142,20 @@ provider = "menus:bookmarks"
 EOF
             echo -e "${GREEN}✓${NC} Added bookmark prefix (!) to Walker"
         fi
+    else
+        # No config file exists - create minimal one with just bookmarks
+        echo -e "${YELLOW}  Creating minimal Walker configuration...${NC}"
+        cat > "$WALKER_CONFIG" << 'EOF'
+[providers]
+default = [
+  "menus:bookmarks",
+]
+
+[[providers.prefixes]]
+prefix = "!"
+provider = "menus:bookmarks"
+EOF
+        echo -e "${GREEN}✓${NC} Created Walker configuration with bookmarks"
     fi
 fi
 

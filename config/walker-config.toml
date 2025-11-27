@@ -1,16 +1,22 @@
 # Walker Configuration for Bookmarks Manager
-# Add this to your ~/.config/walker/config.toml
+# This shows what the initialization script adds to your Walker config
+# The script will only add these minimal changes to your existing config
 
+# Adds bookmarks to your default providers array
+# (Only adds "menus:bookmarks" to your existing default array)
 [providers]
-max_results = 256
 default = [
-  "desktopapplications",
-  "menus:bookmarks",  # Add bookmarks to default search
-  "websearch",
+  "menus:bookmarks",  # This line gets added to your existing providers
 ]
 
-# Prefix configuration for bookmarks
-# Type "!" in Walker to show only bookmarks
+# Adds a prefix for exclusive bookmark search
+# (This entire section gets appended if not already present)
 [[providers.prefixes]]
 prefix = "!"
 provider = "menus:bookmarks"
+
+# Note: The initialization script is smart enough to:
+# - Detect your existing Walker configuration
+# - Only add what's needed for bookmarks
+# - Preserve all your other settings
+# - Create a backup before making changes
