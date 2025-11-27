@@ -1,5 +1,7 @@
 # Bookmarks Manager
 
+[![CI](https://github.com/luski/bookmarks-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/luski/bookmarks-manager/actions/workflows/ci.yml)
+
 A bookmarks management system for Arch Linux with Hyprland integration using Walker launcher.
 
 ## Stack
