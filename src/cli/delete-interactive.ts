@@ -1,0 +1,54 @@
+#!/usr/bin/env node
+import { BookmarkModel } from '../models/bookmark.js';
+import { initDatabase } from '../db/database.js';
+import { execSync } from 'child_process';
+
+initDatabase();
+
+async function selectAndDelete() {
+  const bookmarks = BookmarkModel.findAll();
+  
+  if (bookmarks.length === 0) {
+    execSync(`notify-send 'No Bookmarks' 'No bookmarks to delete'`);
+    process.exit(0);
+  }
+
+  // Create list for walker dmenu
+  const options = bookmarks.map(b => 
+    `${b.id}|${b.title}|${b.url}`
+  ).join('\n');
+
+  try {
+    const result = execSync(
+      `printf "${options.replace(/"/g, '\\"')}" | walker --dmenu`,
+      { encoding: 'utf-8', shell: '/bin/bash' }
+    ).trim();
+
+    if (!result) {
+      console.log('Cancelled');
+      process.exit(0);
+    }
+
+    // Parse selection
+    const [id, title] = result.split('|');
+    
+    // Confirm deletion
+    const confirm = execSync(
+      `printf "Yes, delete '${title}'\nNo, cancel" | walker --dmenu`,
+      { encoding: 'utf-8', shell: '/bin/bash' }
+    ).trim();
+
+    if (confirm.startsWith('Yes')) {
+      BookmarkModel.delete(parseInt(id));
+      execSync(`notify-send '🗑️  Bookmark Deleted' '${title}'`);
+      console.log(`Deleted: ${title}`);
+    } else {
+      execSync(`notify-send 'Cancelled' 'Bookmark not deleted'`);
+    }
+  } catch (error) {
+    console.log('Cancelled');
+    process.exit(0);
+  }
+}
+
+selectAndDelete();

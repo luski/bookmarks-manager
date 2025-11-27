@@ -5,11 +5,13 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && chmod +x dist/cli/bookmarks-cli.js",
+    "build": "tsc && chmod +x dist/cli/bookmarks-cli.js dist/cli/add-interactive.js dist/cli/delete-interactive.js",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "db:migrate": "tsx src/db/migrate.ts",
-    "bookmarks": "tsx src/cli/bookmarks-cli.ts"
+    "bookmarks": "tsx src/cli/bookmarks-cli.ts",
+    "add": "tsx src/cli/add-interactive.ts",
+    "delete": "tsx src/cli/delete-interactive.ts"
   },
   "keywords": ["bookmarks", "walker", "hyprland"],
   "author": "",
