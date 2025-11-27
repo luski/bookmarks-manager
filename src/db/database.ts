@@ -19,6 +19,7 @@ export function initDatabase() {
       url TEXT NOT NULL UNIQUE,
       description TEXT,
       tags TEXT,
+      favicon TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
