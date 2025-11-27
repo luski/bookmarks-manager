@@ -25,7 +25,19 @@ npm run db:migrate
 npm run build
 ```
 
-4. Run in development:
+4. **Setup Walker Integration** (automated):
+```bash
+./scripts/setup-walker-integration.sh
+```
+
+This will automatically:
+- Install Elephant menu configuration
+- Guide you through Walker configuration
+- Restart Elephant to load the bookmarks menu
+
+For manual setup, see [config/README.md](config/README.md).
+
+5. Run in development:
 ```bash
 npm run dev
 ```
@@ -35,11 +47,12 @@ npm run dev
 Walker integration is complete! See [WALKER_INTEGRATION.md](WALKER_INTEGRATION.md) for detailed usage instructions.
 
 **Quick Start:**
-1. Make sure `elephant` is running
-2. Open Walker (your configured keybind)
-3. Type `!` to search bookmarks exclusively, or just search normally to see bookmarks in results
-4. Press Enter on a bookmark to open it in your browser
-5. Select "Add New Bookmark" to add URLs from your clipboard
+1. Run the setup script: `./scripts/setup-walker-integration.sh`
+2. Make sure `elephant` is running
+3. Open Walker (your configured keybind)
+4. Type `!` to search bookmarks exclusively, or just search normally to see bookmarks in results
+5. Press Enter on a bookmark to open it in your browser
+6. Select "Add New Bookmark" to add URLs from your clipboard
 
 The integration uses Elephant's Lua menu system to dynamically query the bookmark database and display results in Walker.
 
