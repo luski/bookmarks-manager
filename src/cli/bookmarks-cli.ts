@@ -11,23 +11,36 @@ if (command === "list") {
   const bookmarks = BookmarkModel.findAll();
   bookmarks.forEach((b) => {
     const tags = b.tags ? ` [${b.tags}]` : "";
-    console.log(`${b.id}|${b.title}|${b.url}|${b.description || ""}${tags}`);
+    const favicon = b.favicon || "";
+    console.log(
+      `${b.id}|${b.title}|${b.url}|${b.description || ""}${tags}|${favicon}`,
+    );
   });
 } else if (command === "search") {
   const query = arg || "";
   const results = BookmarkModel.search(query);
   results.forEach((b) => {
     const tags = b.tags ? ` [${b.tags}]` : "";
-    console.log(`${b.id}|${b.title}|${b.url}|${b.description || ""}${tags}`);
+    const favicon = b.favicon || "";
+    console.log(
+      `${b.id}|${b.title}|${b.url}|${b.description || ""}${tags}|${favicon}`,
+    );
   });
 } else if (command === "add") {
   const url = arg;
   const title = process.argv[4] || url;
   const description = process.argv[5] || "";
   const tags = process.argv[6] || "";
+  const favicon = process.argv[7] || "";
 
   try {
-    const bookmark = BookmarkModel.create({ title, url, description, tags });
+    const bookmark = BookmarkModel.create({
+      title,
+      url,
+      description,
+      tags,
+      favicon,
+    });
     console.log(`Added: ${bookmark.title}`);
   } catch (error) {
     console.error(`Error: ${error}`);

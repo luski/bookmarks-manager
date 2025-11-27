@@ -6,6 +6,7 @@ export interface Bookmark {
   url: string;
   description?: string;
   tags?: string;
+  favicon?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -14,8 +15,8 @@ export function create(
   bookmark: Omit<Bookmark, "id" | "created_at" | "updated_at">,
 ): Bookmark {
   const stmt = db.prepare(`
-    INSERT INTO bookmarks (title, url, description, tags)
-    VALUES (@title, @url, @description, @tags)
+    INSERT INTO bookmarks (title, url, description, tags, favicon)
+    VALUES (@title, @url, @description, @tags, @favicon)
   `);
 
   const result = stmt.run(bookmark);
