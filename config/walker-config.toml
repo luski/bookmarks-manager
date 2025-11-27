@@ -1,0 +1,16 @@
+# Walker Configuration for Bookmarks Manager
+# Add this to your ~/.config/walker/config.toml
+
+[providers]
+max_results = 256
+default = [
+  "desktopapplications",
+  "menus:bookmarks",  # Add bookmarks to default search
+  "websearch",
+]
+
+# Prefix configuration for bookmarks
+# Type "!" in Walker to show only bookmarks
+[[providers.prefixes]]
+prefix = "!"
+provider = "menus:bookmarks"
