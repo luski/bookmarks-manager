@@ -8,7 +8,7 @@ Quick start guide for setting up the Bookmarks Manager with Walker launcher inte
 - **Arch Linux** with Hyprland (or similar Wayland compositor)
 - **Walker** - Application launcher ([GitHub](https://github.com/abenz1267/walker))
 - **Elephant** - Menu provider for Walker ([GitHub](https://github.com/abenz1267/elephant))
-- **Node.js** (v18 or later) - JavaScript runtime
+- **Node.js** (v18 or later) - JavaScript runtime (must be in PATH)
 - **npm** - Package manager (comes with Node.js)
 
 ### Optional
@@ -23,6 +23,13 @@ yay -S walker-bin elephant-bin
 
 # Or build from source
 # See their respective GitHub repositories
+
+# Install Node.js (if not already installed)
+sudo pacman -S nodejs npm
+
+# If using fnm or nvm, ensure Node is in your PATH
+# For fnm users, add to your shell rc file:
+# eval "$(fnm env)"
 
 # Install optional dependencies
 sudo pacman -S wl-clipboard libnotify

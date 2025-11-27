@@ -141,14 +141,21 @@ Edit `~/.config/elephant/menus/bookmarks.lua` to:
 - Add more actions
 - Change default browser behavior
 
-### Use Different Node Version
+### Node.js Requirements
 
-The `bookmarks.lua` file automatically detects Node.js in your PATH and has smart fallbacks:
-1. First tries `which node` (system Node or version manager in PATH)
-2. Falls back to latest fnm version automatically
-3. Final fallback to `/usr/bin/node`
+The `bookmarks.lua` file assumes `node` is available in your `PATH`. 
 
-If you use a version manager, ensure Node is in your PATH when running the initialization script.
+If you use a version manager like fnm or nvm, make sure Node is available in your environment:
+
+```bash
+# For fnm users, add to your shell rc file:
+eval "$(fnm env)"
+
+# For nvm users:
+# Already handled by nvm init
+```
+
+The initialization script will verify Node is available before proceeding.
 
 ## Troubleshooting
 
@@ -188,13 +195,19 @@ xdg-settings set default-web-browser firefox.desktop
 
 ### Node.js not found
 
-The Lua script tries to find Node.js using `which node`. If you use fnm or another version manager:
+The Lua script expects `node` to be available in your `PATH`.
 
-1. Ensure Node is in your PATH, or
-2. Update the fallback path in `bookmarks.lua`:
-   ```lua
-   node_path = os.getenv("HOME") .. "/.local/share/fnm/node-versions/vX.X.X/installation/bin/node"
-   ```
+If you use fnm or another version manager, ensure it's properly initialized in your shell:
+
+```bash
+# Check if node is in PATH
+which node
+
+# For fnm users, add to ~/.bashrc or ~/.zshrc:
+eval "$(fnm env)"
+```
+
+If Elephant doesn't inherit your shell environment, you may need to ensure Node is available system-wide.
 
 ### Add Bookmark doesn't work
 
