@@ -12,6 +12,8 @@
     "bookmarks": "tsx src/cli/bookmarks-cli.ts",
     "add": "tsx src/cli/add-interactive.ts",
     "delete": "tsx src/cli/delete-interactive.ts",
+    "init": "./initialize.sh",
+    "setup": "./scripts/setup-walker-integration.sh",
     "lint": "biome lint --write .",
     "format": "biome format --write .",
     "check": "biome check --write .",

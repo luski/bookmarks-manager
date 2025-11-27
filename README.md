@@ -8,24 +8,37 @@ A bookmarks management system for Arch Linux with Hyprland integration using Wal
 - **Database**: SQLite3 (better-sqlite3)
 - **Frontend**: Walker launcher integration
 
-## Setup
+## Quick Start (Fully Automatic)
 
-1. Install dependencies:
+Run the initialization script to set up everything automatically:
+
 ```bash
-npm install
+./initialize.sh
 ```
 
-2. Initialize database:
+Or using npm:
+
 ```bash
-npm run db:migrate
+npm run init
 ```
 
-3. Build the project:
-```bash
-npm run build
-```
+This will automatically:
+- ✓ Install Node.js dependencies
+- ✓ Initialize the SQLite database
+- ✓ Build the project
+- ✓ Install Elephant menu configuration (with correct paths)
+- ✓ Configure Walker to include bookmarks
+- ✓ Restart Elephant
 
-4. Run in development:
+**That's it!** The bookmarks manager is now fully integrated with Walker.
+
+## Manual Setup
+
+If you prefer to set up manually, see [INSTALL.md](INSTALL.md) for detailed instructions.
+
+## Development
+
+Run in development mode:
 ```bash
 npm run dev
 ```
@@ -34,12 +47,11 @@ npm run dev
 
 Walker integration is complete! See [WALKER_INTEGRATION.md](WALKER_INTEGRATION.md) for detailed usage instructions.
 
-**Quick Start:**
-1. Make sure `elephant` is running
-2. Open Walker (your configured keybind)
-3. Type `!` to search bookmarks exclusively, or just search normally to see bookmarks in results
-4. Press Enter on a bookmark to open it in your browser
-5. Select "Add New Bookmark" to add URLs from your clipboard
+**Usage:**
+1. Open Walker (your configured keybind, usually `Super+Space`)
+2. Type `!` to search bookmarks exclusively, or just search normally to see bookmarks in results
+3. Press Enter on a bookmark to open it in your browser
+4. Select "Add New Bookmark" to add URLs from your clipboard
 
 The integration uses Elephant's Lua menu system to dynamically query the bookmark database and display results in Walker.
 
