@@ -30,20 +30,50 @@ sudo pacman -S wl-clipboard libnotify
 
 ## Installation Steps
 
-### 1. Clone the Repository
+### Option 1: Automatic Installation (Recommended)
+
+Simply run the initialization script:
+
+```bash
+git clone https://github.com/luski/bookmarks-manager.git
+cd bookmarks-manager
+./initialize.sh
+```
+
+Or using npm:
+
+```bash
+npm run init
+```
+
+This single command will automatically:
+- ✓ Install Node.js dependencies
+- ✓ Initialize the SQLite database
+- ✓ Build the project
+- ✓ Install Elephant menu configuration (with correct paths)
+- ✓ Configure Walker to include bookmarks
+- ✓ Restart Elephant
+
+**That's it! Skip to the [Verification](#verification) section.**
+
+### Option 2: Manual Installation
+
+If you prefer manual setup or the automatic script doesn't work for your setup:
+
+#### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/luski/bookmarks-manager.git
 cd bookmarks-manager
 ```
 
-### 2. Install Node Dependencies
+#### 2. Install Node Dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Initialize Database
+#### 3. Initialize Database
 
 ```bash
 npm run db:migrate
@@ -51,7 +81,7 @@ npm run db:migrate
 
 This creates the SQLite database and sets up the schema.
 
-### 4. Build the Project
+#### 4. Build the Project
 
 ```bash
 npm run build
@@ -59,25 +89,7 @@ npm run build
 
 This compiles TypeScript to JavaScript and makes CLI scripts executable.
 
-### 5. Setup Walker Integration (Automated)
-
-```bash
-npm run setup
-```
-
-Or run the script directly:
-
-```bash
-./scripts/setup-walker-integration.sh
-```
-
-This will:
-- ✓ Install Elephant menu configuration
-- ✓ Update paths to match your installation
-- ✓ Guide you through Walker configuration
-- ✓ Restart Elephant to load the bookmarks menu
-
-### 6. Configure Walker (If Not Using Automated Setup)
+#### 5. Configure Walker (Manual)
 
 If you skipped the automated setup or it couldn't auto-configure Walker:
 

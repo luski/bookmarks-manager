@@ -7,12 +7,26 @@ Description = "Manage and open bookmarks"
 
 function GetEntries()
 	local entries = {}
-	local bookmark_cli = os.getenv("HOME") .. "/projects/private/bookmarks/dist/cli/bookmarks-cli.js"
+	local bookmark_cli = "{{PROJECT_PATH}}/dist/cli/bookmarks-cli.js"
 	local node_path = io.popen("which node"):read("*l")
 
 	-- Fallback to fnm if node not in PATH
 	if not node_path or node_path == "" then
-		node_path = os.getenv("HOME") .. "/.local/share/fnm/node-versions/v22.20.0/installation/bin/node"
+		local fnm_base = os.getenv("HOME") .. "/.local/share/fnm/node-versions"
+		-- Try to find latest Node version in fnm
+		local handle = io.popen("ls -1 " .. fnm_base .. " 2>/dev/null | sort -V | tail -1")
+		if handle then
+			local latest_version = handle:read("*l")
+			handle:close()
+			if latest_version and latest_version ~= "" then
+				node_path = fnm_base .. "/" .. latest_version .. "/installation/bin/node"
+			end
+		end
+	end
+
+	-- Final fallback
+	if not node_path or node_path == "" then
+		node_path = "/usr/bin/node"
 	end
 
 	local handle = io.popen(node_path .. " " .. bookmark_cli .. " list 2>/dev/null")
@@ -56,12 +70,24 @@ function GetEntries()
 end
 
 function DeleteBookmark(value, args)
-	local bookmark_cli = os.getenv("HOME") .. "/projects/private/bookmarks/dist/cli/bookmarks-cli.js"
+	local bookmark_cli = "{{PROJECT_PATH}}/dist/cli/bookmarks-cli.js"
 	local node_path = io.popen("which node"):read("*l")
 
 	-- Fallback to fnm if node not in PATH
 	if not node_path or node_path == "" then
-		node_path = os.getenv("HOME") .. "/.local/share/fnm/node-versions/v22.20.0/installation/bin/node"
+		local fnm_base = os.getenv("HOME") .. "/.local/share/fnm/node-versions"
+		local handle = io.popen("ls -1 " .. fnm_base .. " 2>/dev/null | sort -V | tail -1")
+		if handle then
+			local latest_version = handle:read("*l")
+			handle:close()
+			if latest_version and latest_version ~= "" then
+				node_path = fnm_base .. "/" .. latest_version .. "/installation/bin/node"
+			end
+		end
+	end
+
+	if not node_path or node_path == "" then
+		node_path = "/usr/bin/node"
 	end
 
 	-- The ID is passed in the args from the action
@@ -91,12 +117,24 @@ function DeleteBookmark(value, args)
 end
 
 function AddBookmark(value, args)
-	local add_interactive = os.getenv("HOME") .. "/projects/private/bookmarks/dist/cli/add-interactive.js"
+	local add_interactive = "{{PROJECT_PATH}}/dist/cli/add-interactive.js"
 	local node_path = io.popen("which node"):read("*l")
 
 	-- Fallback to fnm if node not in PATH
 	if not node_path or node_path == "" then
-		node_path = os.getenv("HOME") .. "/.local/share/fnm/node-versions/v22.20.0/installation/bin/node"
+		local fnm_base = os.getenv("HOME") .. "/.local/share/fnm/node-versions"
+		local handle = io.popen("ls -1 " .. fnm_base .. " 2>/dev/null | sort -V | tail -1")
+		if handle then
+			local latest_version = handle:read("*l")
+			handle:close()
+			if latest_version and latest_version ~= "" then
+				node_path = fnm_base .. "/" .. latest_version .. "/installation/bin/node"
+			end
+		end
+	end
+
+	if not node_path or node_path == "" then
+		node_path = "/usr/bin/node"
 	end
 
 	-- Run the interactive add script

@@ -1,11 +1,23 @@
 # Configuration Files
 
-This directory contains configuration files for integrating the Bookmarks Manager with Walker launcher and Elephant menus.
+This directory contains configuration templates for integrating the Bookmarks Manager with Walker launcher and Elephant menus.
+
+## Quick Start
+
+**Use the automatic initialization script instead of manual setup:**
+
+```bash
+./initialize.sh
+```
+
+This will automatically install and configure everything. See the sections below only if you need to customize or troubleshoot.
 
 ## Files
 
-### `bookmarks.lua`
-Elephant menu configuration that provides the bookmarks interface in Walker.
+### `bookmarks.lua` (Template)
+Elephant menu configuration template that provides the bookmarks interface in Walker.
+
+**Note:** This is a template file with `{{PROJECT_PATH}}` placeholder. The initialization script automatically replaces this with your actual project path and installs it to `~/.config/elephant/menus/bookmarks.lua`.
 
 **Features:**
 - Dynamic bookmark listing from SQLite database
@@ -30,19 +42,28 @@ Walker configuration snippet showing how to integrate bookmarks into your Walker
 
 ### Automatic Setup (Recommended)
 
-Run the setup script from the project root:
+Run the initialization script from the project root:
 
 ```bash
-./scripts/setup-walker-integration.sh
+./initialize.sh
+```
+
+Or using npm:
+
+```bash
+npm run init
 ```
 
 This will:
 1. ✓ Check if Walker and Elephant are installed
-2. ✓ Build the project if needed
-3. ✓ Copy `bookmarks.lua` to Elephant menus directory
-4. ✓ Update paths to match your project location
-5. ✓ Guide you through Walker configuration
-6. ✓ Restart Elephant to load the menu
+2. ✓ Install Node.js dependencies
+3. ✓ Initialize the database
+4. ✓ Build the project
+5. ✓ Process template and install `bookmarks.lua` to Elephant menus directory
+6. ✓ Automatically configure Walker (modifies your config.toml)
+7. ✓ Restart Elephant to load the menu
+
+**This is fully automatic and requires no manual configuration!**
 
 ### Manual Setup
 
@@ -105,7 +126,12 @@ Edit `~/.config/elephant/menus/bookmarks.lua` to:
 
 ### Use Different Node Version
 
-The `bookmarks.lua` file automatically detects Node.js in your PATH. If you use a version manager like fnm, ensure Node is in your PATH or update the fallback path in the Lua file.
+The `bookmarks.lua` file automatically detects Node.js in your PATH and has smart fallbacks:
+1. First tries `which node` (system Node or version manager in PATH)
+2. Falls back to latest fnm version automatically
+3. Final fallback to `/usr/bin/node`
+
+If you use a version manager, ensure Node is in your PATH when running the initialization script.
 
 ## Troubleshooting
 
@@ -193,8 +219,27 @@ bookmarks/
         └── delete-interactive.js  # Interactive delete script
 ```
 
+## Scripts Comparison
+
+### `initialize.sh` (Recommended)
+- **Location:** Project root
+- **Purpose:** Complete automatic setup
+- **What it does:** Everything - dependencies, database, build, config installation, Walker modification
+- **User interaction:** None (fully automatic)
+- **Use when:** First time setup or fresh installation
+
+### `scripts/setup-walker-integration.sh` (Advanced)
+- **Location:** `scripts/` directory
+- **Purpose:** Only handles Walker/Elephant configuration
+- **What it does:** Installs configs and guides Walker setup (assumes project is built)
+- **User interaction:** May require manual Walker config editing
+- **Use when:** Reinstalling just the Walker integration after project is already set up
+
+**For most users, just use `./initialize.sh` and ignore the other script.**
+
 ## Related Documentation
 
+- [INSTALL.md](../INSTALL.md) - Complete installation guide
 - [WALKER_INTEGRATION.md](../WALKER_INTEGRATION.md) - Full integration guide
 - [IMPLEMENTATION.md](../IMPLEMENTATION.md) - Implementation details
 - [README.md](../README.md) - Main project documentation
