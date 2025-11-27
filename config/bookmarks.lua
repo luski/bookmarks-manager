@@ -5,24 +5,38 @@ Action = "/usr/bin/xdg-open %VALUE%"
 Cache = false
 Description = "Manage and open bookmarks"
 
+-- Constants
+local PROJECT_PATH = "{{PROJECT_PATH}}"
+local BOOKMARKS_CLI = PROJECT_PATH .. "/dist/cli/bookmarks-cli.js"
+local ADD_CLI = PROJECT_PATH .. "/dist/cli/add-interactive.js"
+
+-- Helper: Check if file exists
+local function fileExists(path)
+	if not path or path == "" then
+		return false
+	end
+	local file = io.open(path, "r")
+	if file then
+		io.close(file)
+		return true
+	end
+	return false
+end
+
+-- Helper: Run bookmarks CLI command
+local function runCli(args)
+	return io.popen("node " .. BOOKMARKS_CLI .. " " .. args .. " 2>/dev/null")
+end
+
 function GetEntries()
 	local entries = {}
-	local bookmark_cli = "{{PROJECT_PATH}}/dist/cli/bookmarks-cli.js"
+	local handle = runCli("list")
 
-	local handle = io.popen("node " .. bookmark_cli .. " list 2>/dev/null")
 	if handle then
 		for line in handle:lines() do
 			local id, title, url, desc, favicon = line:match("^(%d+)|([^|]*)|([^|]*)|([^|]*)|(.*)$")
 			if id and title and url then
-				local icon = "text-html"
-				-- Use favicon if available and file exists
-				if favicon and favicon ~= "" then
-					local file = io.open(favicon, "r")
-					if file then
-						io.close(file)
-						icon = favicon
-					end
-				end
+				local icon = fileExists(favicon) and favicon or "text-html"
 
 				table.insert(entries, {
 					Text = title,
@@ -35,7 +49,7 @@ function GetEntries()
 		handle:close()
 	end
 
-	-- Add entry to create new bookmark
+	-- Add entry to create new bookmark (always first)
 	table.insert(entries, 1, {
 		Text = "Add New Bookmark",
 		Subtext = "Add URL from clipboard or enter manually",
@@ -50,15 +64,12 @@ function GetEntries()
 end
 
 function DeleteBookmark(value, args)
-	local bookmark_cli = "{{PROJECT_PATH}}/dist/cli/bookmarks-cli.js"
-
-	-- The ID is passed in the args from the action
 	local id = value:match(":(%d+)$")
 
 	if id then
-		-- Get the bookmark title for notification
-		local handle = io.popen("node " .. bookmark_cli .. " list 2>/dev/null")
+		-- Get bookmark title for notification
 		local title = "Unknown"
+		local handle = runCli("list")
 		if handle then
 			for line in handle:lines() do
 				local found_id, found_title = line:match("^(%d+)|([^|]*)|")
@@ -71,7 +82,7 @@ function DeleteBookmark(value, args)
 		end
 
 		-- Delete the bookmark
-		os.execute("node " .. bookmark_cli .. " delete " .. id)
+		os.execute("node " .. BOOKMARKS_CLI .. " delete " .. id)
 		os.execute("notify-send '🗑️  Bookmark Deleted' '" .. title .. "'")
 	else
 		os.execute("notify-send 'Error' 'Could not delete bookmark'")
@@ -79,8 +90,5 @@ function DeleteBookmark(value, args)
 end
 
 function AddBookmark(value, args)
-	local add_interactive = "{{PROJECT_PATH}}/dist/cli/add-interactive.js"
-
-	-- Run the interactive add script
-	os.execute("node " .. add_interactive)
+	os.execute("node " .. ADD_CLI)
 end
