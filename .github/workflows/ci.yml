@@ -65,7 +65,7 @@ jobs:
         run: npm run build
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: dist
           path: dist/
@@ -118,7 +118,7 @@ jobs:
           echo "All database operations passed!"
 
       - name: Upload database artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-database
           path: bookmarks.db*
