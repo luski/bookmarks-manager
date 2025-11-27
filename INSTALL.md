@@ -8,7 +8,7 @@ Quick start guide for setting up the Bookmarks Manager with Walker launcher inte
 - **Arch Linux** with Hyprland (or similar Wayland compositor)
 - **Walker** - Application launcher ([GitHub](https://github.com/abenz1267/walker))
 - **Elephant** - Menu provider for Walker ([GitHub](https://github.com/abenz1267/elephant))
-- **Node.js** (v18 or later) - JavaScript runtime (must be in PATH)
+- **Node.js** (v22.5.0 or later) - JavaScript runtime with native SQLite support (must be in PATH)
 - **npm** - Package manager (comes with Node.js)
 
 ### Optional
@@ -24,7 +24,8 @@ yay -S walker-bin elephant-bin
 # Or build from source
 # See their respective GitHub repositories
 
-# Install Node.js (if not already installed)
+# Install Node.js 22.5+ (if not already installed)
+# Make sure you have a recent version with native SQLite support
 sudo pacman -S nodejs npm
 
 # If using fnm or nvm, ensure Node is in your PATH

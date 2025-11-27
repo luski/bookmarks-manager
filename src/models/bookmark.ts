@@ -16,11 +16,18 @@ export function create(
 ): Bookmark {
   const stmt = db.prepare(`
     INSERT INTO bookmarks (title, url, description, tags, favicon)
-    VALUES (@title, @url, @description, @tags, @favicon)
+    VALUES (?, ?, ?, ?, ?)
   `);
 
-  const result = stmt.run(bookmark);
-  const created = findById(result.lastInsertRowid as number);
+  const result = stmt.run(
+    bookmark.title,
+    bookmark.url,
+    bookmark.description || null,
+    bookmark.tags || null,
+    bookmark.favicon || null,
+  );
+
+  const created = findById(Number(result.lastInsertRowid));
 
   if (!created) {
     throw new Error("Failed to create bookmark");
@@ -31,12 +38,12 @@ export function create(
 
 export function findAll(): Bookmark[] {
   const stmt = db.prepare("SELECT * FROM bookmarks ORDER BY created_at DESC");
-  return stmt.all() as Bookmark[];
+  return stmt.all() as unknown as Bookmark[];
 }
 
 export function findById(id: number): Bookmark | undefined {
   const stmt = db.prepare("SELECT * FROM bookmarks WHERE id = ?");
-  return stmt.get(id) as Bookmark | undefined;
+  return stmt.get(id) as unknown as Bookmark | undefined;
 }
 
 export function search(query: string): Bookmark[] {
@@ -46,7 +53,12 @@ export function search(query: string): Bookmark[] {
     ORDER BY created_at DESC
   `);
   const searchTerm = `%${query}%`;
-  return stmt.all(searchTerm, searchTerm, searchTerm, searchTerm) as Bookmark[];
+  return stmt.all(
+    searchTerm,
+    searchTerm,
+    searchTerm,
+    searchTerm,
+  ) as unknown as Bookmark[];
 }
 
 export function update(
@@ -54,15 +66,16 @@ export function update(
   bookmark: Partial<Bookmark>,
 ): Bookmark | undefined {
   const fields = Object.keys(bookmark).filter((k) => k !== "id");
-  const setClause = fields.map((f) => `${f} = @${f}`).join(", ");
+  const setClause = fields.map((f) => `${f} = ?`).join(", ");
+  const values = fields.map((f) => bookmark[f as keyof Bookmark] ?? null);
 
   const stmt = db.prepare(`
     UPDATE bookmarks
     SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-    WHERE id = @id
+    WHERE id = ?
   `);
 
-  stmt.run({ ...bookmark, id });
+  stmt.run(...values, id);
   return findById(id);
 }
 

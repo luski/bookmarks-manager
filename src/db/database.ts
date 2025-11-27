@@ -1,14 +1,15 @@
 import path, { dirname } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
-import Database from "better-sqlite3";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const dbPath = path.join(__dirname, "../../bookmarks.db");
-export const db = new Database(dbPath);
+export const db = new DatabaseSync(dbPath);
 
-db.pragma("journal_mode = WAL");
+// Enable WAL mode for better concurrent access
+db.exec("PRAGMA journal_mode = WAL");
 
 export function initDatabase() {
   db.exec(`
