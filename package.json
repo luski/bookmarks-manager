@@ -9,12 +9,21 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "db:migrate": "tsx src/db/migrate.ts",
-    "bookmarks": "tsx src/cli/bookmarks-cli.ts"
+    "bookmarks": "tsx src/cli/bookmarks-cli.ts",
+    "lint": "biome lint --write .",
+    "format": "biome format --write .",
+    "check": "biome check --write .",
+    "ci": "biome ci ."
   },
-  "keywords": ["bookmarks", "walker", "hyprland"],
+  "keywords": [
+    "bookmarks",
+    "walker",
+    "hyprland"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@biomejs/biome": "2.3.7",
     "@types/better-sqlite3": "^7.6.8",
     "@types/node": "^20.10.6",
     "tsx": "^4.7.0",
