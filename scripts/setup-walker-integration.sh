@@ -15,12 +15,14 @@ CONFIG_DIR="$PROJECT_ROOT/config"
 
 echo -e "${GREEN}=== Bookmarks Manager - Walker Integration Setup ===${NC}\n"
 
-# Check if project is built
-if [ ! -f "$PROJECT_ROOT/dist/cli/bookmarks-cli.js" ]; then
-    echo -e "${YELLOW}Project not built. Running build...${NC}"
-    cd "$PROJECT_ROOT"
-    npm run build
+# Check if Lua dependencies are installed
+echo -e "${GREEN}Checking Lua dependencies...${NC}"
+if ! lua -e "require('lsqlite3')" 2>/dev/null; then
+    echo -e "${YELLOW}lsqlite3 not found. Installing Lua dependencies...${NC}"
+    "$SCRIPT_DIR/install-lua-deps.sh"
     echo ""
+else
+    echo -e "  ✓ lsqlite3 found"
 fi
 
 # Check if Elephant is installed
@@ -50,8 +52,22 @@ cp "$CONFIG_DIR/bookmarks.lua" "$ELEPHANT_MENUS_DIR/bookmarks.lua"
 echo -e "  ✓ Copied to $ELEPHANT_MENUS_DIR/bookmarks.lua"
 
 # Update paths in the Lua file to use current project location
-sed -i "s|HOME .. \"/projects/private/bookmarks|HOME .. \"$PROJECT_ROOT|g" "$ELEPHANT_MENUS_DIR/bookmarks.lua"
+sed -i "s|HOME .. \"{{PROJECT_PATH}}\"|HOME .. \"$PROJECT_ROOT\"|g" "$ELEPHANT_MENUS_DIR/bookmarks.lua"
 echo -e "  ✓ Updated paths to: $PROJECT_ROOT"
+
+# Ensure Lua can find lsqlite3 by updating Elephant's environment
+ELEPHANT_ENV="$HOME/.config/elephant/env.sh"
+if [ ! -f "$ELEPHANT_ENV" ]; then
+    mkdir -p "$(dirname "$ELEPHANT_ENV")"
+    echo '#!/bin/bash' > "$ELEPHANT_ENV"
+    echo 'eval $(luarocks path --lua-version 5.4)' >> "$ELEPHANT_ENV"
+    echo -e "  ✓ Created Elephant environment file"
+else
+    if ! grep -q "luarocks path" "$ELEPHANT_ENV"; then
+        echo 'eval $(luarocks path --lua-version 5.4)' >> "$ELEPHANT_ENV"
+        echo -e "  ✓ Updated Elephant environment file"
+    fi
+fi
 
 # Walker configuration
 WALKER_CONFIG_DIR="$HOME/.config/walker"
@@ -81,15 +97,13 @@ echo "  1. Open Walker (your configured keybind)"
 echo "  2. Type '!' to search bookmarks exclusively"
 echo "  3. Or just type to search across all providers (bookmarks included)"
 echo "  4. Press Enter on a bookmark to open it"
-echo "  5. Select 'Add New Bookmark' to add from clipboard"
+echo "  5. Press Ctrl+X on a bookmark to delete it"
+echo "  6. Select 'Add New Bookmark' to add a new bookmark"
 echo ""
-echo "CLI Usage:"
-echo "  npm run add          - Add bookmark interactively"
-echo "  npm run delete       - Delete bookmark interactively"
-echo "  npm run bookmarks    - Manage bookmarks via CLI"
 echo ""
 echo "Troubleshooting:"
 echo "  - Check Elephant is running: pgrep elephant"
 echo "  - Restart Elephant: killall elephant && elephant &"
-echo "  - Test CLI: npm run bookmarks list"
+echo "  - Check database: sqlite3 $PROJECT_ROOT/bookmarks.db '.tables'"
+echo "  - Ensure Lua path is set: eval \$(luarocks path --lua-version 5.4)"
 echo ""

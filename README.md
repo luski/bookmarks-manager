@@ -6,44 +6,43 @@ A bookmarks management system for Arch Linux with Hyprland integration using Wal
 
 ## Stack
 
-- **Backend**: Node.js 22.5+ with TypeScript
-- **Database**: SQLite3 (native `node:sqlite` module)
-- **Frontend**: Walker launcher integration
+- **Backend**: Pure Lua (no Node.js required!)
+- **Database**: SQLite3 (via `lsqlite3`)
+- **Frontend**: Walker launcher integration via Elephant menus
 
-## Quick Start (Fully Automatic)
+## Quick Start
 
-Run the initialization script to set up everything automatically:
+### Prerequisites
+
+- Lua 5.4+
+- luarocks
+- Elephant
+- Walker
+- curl (for favicon downloads)
+- rofi or dmenu (for input dialogs)
+
+### Installation
+
+Run the setup script:
 
 ```bash
-./initialize.sh
-```
-
-Or using npm:
-
-```bash
-npm run init
+./scripts/setup-walker-integration.sh
 ```
 
 This will automatically:
-- ✓ Install Node.js dependencies
+- ✓ Install Lua dependencies (lsqlite3)
 - ✓ Initialize the SQLite database
-- ✓ Build the project
-- ✓ Install Elephant menu configuration (with correct paths)
+- ✓ Install Elephant menu configuration
 - ✓ Configure Walker to include bookmarks
 - ✓ Restart Elephant
 
 **That's it!** The bookmarks manager is now fully integrated with Walker.
 
+For detailed information about the Lua implementation, see [LUA_IMPLEMENTATION.md](LUA_IMPLEMENTATION.md).
+
 ## Manual Setup
 
 If you prefer to set up manually, see [INSTALL.md](INSTALL.md) for detailed instructions.
-
-## Development
-
-Run in development mode:
-```bash
-npm run dev
-```
 
 ## Walker Integration
 
@@ -52,10 +51,11 @@ Walker integration is complete! See [WALKER_INTEGRATION.md](WALKER_INTEGRATION.m
 **Usage:**
 1. Open Walker (your configured keybind, usually `Super+Space`)
 2. Type `!` to search bookmarks exclusively, or just search normally to see bookmarks in results
-3. Press Enter on a bookmark to open it in your browser
-4. Select "Add New Bookmark" to add URLs from your clipboard
+3. Press **Enter** on a bookmark to open it in your browser
+4. Press **Ctrl+X** on a bookmark to delete it
+5. Select "Add New Bookmark" to add a new bookmark interactively
 
-The integration uses Elephant's Lua menu system to dynamically query the bookmark database and display results in Walker.
+The integration uses Elephant's Lua menu system with direct SQLite access - no Node.js backend required!
 
 **Prefix:** `!` - Type exclamation mark in Walker to show only bookmarks
 
@@ -63,29 +63,30 @@ The integration uses Elephant's Lua menu system to dynamically query the bookmar
 
 ```
 .
-├── src/
-│   ├── db/
-│   │   ├── database.ts      # Database connection and initialization
-│   │   └── migrate.ts       # Migration script
-│   ├── models/
-│   │   └── bookmark.ts      # Bookmark model and operations
-│   └── index.ts             # Main entry point
-├── bookmarks.db             # SQLite database (auto-created)
-├── package.json
-└── tsconfig.json
+├── config/
+│   ├── bookmarks.lua          # Main Lua implementation (all logic here!)
+│   └── walker-template.toml   # Walker configuration template
+├── scripts/
+│   ├── install-lua-deps.sh    # Installs lsqlite3
+│   ├── setup-walker-integration.sh  # Main setup script
+│   ├── merge-walker-config.mjs     # Merges Walker config
+│   └── test-lua-bookmarks.lua      # Test script
+├── favicons/                  # Downloaded favicons (auto-created)
+└── bookmarks.db              # SQLite database (auto-created)
 ```
 
 ## Features
 
-- ✅ SQLite database for bookmark storage (native Node.js SQLite - no dependencies!)
-- ✅ TypeScript backend with type safety
+- ✅ Pure Lua implementation (no Node.js build step!)
+- ✅ SQLite database for bookmark storage via lsqlite3
 - ✅ CRUD operations for bookmarks
-- ✅ Full-text search across title, URL, description, and tags
 - ✅ Walker launcher integration via Elephant menus
-- ✅ Command-line interface for bookmark management
+- ✅ Interactive bookmark creation with rofi dialogs
 - ✅ Browser URL opening with xdg-open
 - ✅ Quick-add from clipboard
-- ✅ Favicon support for visual identification
+- ✅ Automatic favicon downloading and caching
+- ✅ Delete bookmarks with Ctrl+X in Walker
+- ✅ Fast and lightweight (no startup overhead)
 
 ## Database Schema
 
@@ -94,6 +95,23 @@ The integration uses Elephant's Lua menu system to dynamically query the bookmar
 - `title`: Bookmark title
 - `url`: URL (unique)
 - `description`: Optional description
-- `tags`: Space or comma-separated tags
+- `tags`: Comma-separated tags
+- `favicon`: Path to cached favicon
 - `created_at`: Timestamp
 - `updated_at`: Timestamp
+
+## Architecture
+
+This project uses a simplified two-layer architecture:
+
+```
+SQLite Database ← Elephant (Lua) ← Walker
+```
+
+All bookmark logic is handled directly in `config/bookmarks.lua`, which:
+- Manages the SQLite database via lsqlite3
+- Downloads and caches favicons
+- Provides interactive dialogs for adding bookmarks
+- Returns formatted entries to Walker
+
+For more details, see [LUA_IMPLEMENTATION.md](LUA_IMPLEMENTATION.md).
