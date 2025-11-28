@@ -10,5 +10,6 @@ provider = "menus:bookmarks"
 [providers.actions]
 "menus:bookmarks" = [
   { action = "open", default = true, bind = "Return" },
-  { action = "delete", label = "delete", bind = "ctrl x" },
+  { action = "delete", label = "delete", bind = "ctrl x", after = "AsyncReload" },
+  { action = "add", label = "add bookmark", bind = "ctrl a" },
 ]

@@ -4,6 +4,7 @@ Icon = "bookmark"
 Actions = {
 	open = "lua:OpenBookmark",
 	delete = "lua:DeleteBookmark",
+	add = "lua:AddBookmark",
 }
 Cache = false
 Description = "Manage and open bookmarks"
@@ -273,17 +274,6 @@ end
 function GetEntries()
 	local entries = {}
 
-	-- Add "Add New Bookmark" entry first
-	table.insert(entries, {
-		Text = "Add New Bookmark",
-		Subtext = "Add URL from clipboard or enter manually",
-		Value = "action:add",
-		Icon = "list-add",
-		Actions = {
-			open = "lua:AddBookmark",
-		},
-	})
-
 	-- Get all bookmarks
 	local bookmarks = readBookmarks()
 
@@ -356,7 +346,7 @@ function DeleteBookmark(value, args)
 	end
 end
 
--- Walker action: Add bookmark
+-- Walker action: Add bookmark (called by ctrl+a shortcut)
 function AddBookmark(value, args)
 	-- Get URL from clipboard if it's valid, otherwise use empty default
 	local clipboard = getClipboard()
