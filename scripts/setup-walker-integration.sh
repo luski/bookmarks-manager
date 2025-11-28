@@ -15,11 +15,25 @@ CONFIG_DIR="$PROJECT_ROOT/config"
 
 echo -e "${GREEN}=== Bookmarks Manager - Walker Integration Setup ===${NC}\n"
 
+# Check if npm dependencies are installed (needed for Walker config merge)
+if [ ! -d "$PROJECT_ROOT/node_modules" ]; then
+    echo -e "${YELLOW}Installing npm dependencies for setup...${NC}"
+    cd "$PROJECT_ROOT"
+    npm install
+    echo ""
+fi
+
 # Check if Lua dependencies are installed
 echo -e "${GREEN}Checking Lua dependencies...${NC}"
+
+# Set up Lua paths first to detect locally installed rocks
+eval $(luarocks path --lua-version 5.4 2>/dev/null) || true
+
 if ! lua -e "require('lsqlite3')" 2>/dev/null; then
     echo -e "${YELLOW}lsqlite3 not found. Installing Lua dependencies...${NC}"
     "$SCRIPT_DIR/install-lua-deps.sh"
+    # Reload Lua paths after installation
+    eval $(luarocks path --lua-version 5.4)
     echo ""
 else
     echo -e "  ✓ lsqlite3 found"

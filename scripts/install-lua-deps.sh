@@ -22,13 +22,18 @@ fi
 
 echo -e "${GREEN}Installing lsqlite3...${NC}"
 
-# Install lsqlite3 locally for the current user
-if luarocks install --local lsqlite3 2>&1 | grep -q "is now installed"; then
-    echo -e "  ✓ lsqlite3 installed successfully"
-elif lua -e "require('lsqlite3')" 2>/dev/null; then
+# Set up Lua paths to detect locally installed rocks
+eval $(luarocks path --lua-version 5.4)
+
+# Check if already installed
+if lua -e "require('lsqlite3')" 2>/dev/null; then
     echo -e "  ✓ lsqlite3 already installed"
+# Try to install lsqlite3 locally for the current user
+elif luarocks install --local lsqlite3 2>&1 | grep -q "is now installed"; then
+    echo -e "  ✓ lsqlite3 installed successfully"
 else
     echo -e "${RED}  ✗ Failed to install lsqlite3${NC}"
+    echo "Try running manually: luarocks install --local lsqlite3"
     exit 1
 fi
 

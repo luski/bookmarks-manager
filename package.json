@@ -1,0 +1,13 @@
+{
+  "name": "bookmarks-manager-setup",
+  "version": "1.0.0",
+  "description": "Setup dependencies for bookmarks manager",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "setup": "./scripts/setup-walker-integration.sh"
+  },
+  "dependencies": {
+    "@iarna/toml": "^2.2.5"
+  }
+}
