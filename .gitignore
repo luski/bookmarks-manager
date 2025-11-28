@@ -6,6 +6,10 @@
 # Downloaded favicons
 favicons/
 
+# Node.js (only for setup script dependencies)
+node_modules/
+package-lock.json
+
 # Lua rocks local installation
 .luarocks/
 
