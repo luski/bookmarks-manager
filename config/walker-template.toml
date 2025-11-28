@@ -1,0 +1,14 @@
+[providers]
+default = [
+  "menus:bookmarks",
+]
+
+[[providers.prefixes]]
+prefix = "!"
+provider = "menus:bookmarks"
+
+[providers.actions]
+"menus:bookmarks" = [
+  { action = "open", default = true, bind = "Return" },
+  { action = "delete", label = "delete", bind = "ctrl x" },
+]
