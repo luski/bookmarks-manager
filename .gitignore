@@ -1,7 +1,5 @@
-# SQLite database files
-*.db
-*.db-shm
-*.db-wal
+# Bookmarks storage (contains personal data)
+bookmarks.toml
 
 # Downloaded favicons
 favicons/
@@ -9,9 +7,6 @@ favicons/
 # Node.js (only for setup script dependencies)
 node_modules/
 package-lock.json
-
-# Lua rocks local installation
-.luarocks/
 
 # Editor files
 *.swp

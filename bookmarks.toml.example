@@ -1,0 +1,40 @@
+# Bookmarks Example File
+#
+# This is an example of the bookmarks.toml format.
+# Copy this to bookmarks.toml and customize with your own bookmarks.
+#
+# Each bookmark has exactly 4 fields:
+#   id      - Unique numeric identifier (auto-generated when adding via Walker)
+#   title   - Display name for the bookmark
+#   url     - The URL to open
+#   favicon - Path to cached favicon (auto-downloaded, can be empty)
+
+[[bookmark]]
+id = 1
+title = "GitHub"
+url = "https://github.com"
+favicon = ""
+
+[[bookmark]]
+id = 2
+title = "Rust Programming Language"
+url = "https://www.rust-lang.org"
+favicon = ""
+
+[[bookmark]]
+id = 3
+title = "Arch Linux Wiki"
+url = "https://wiki.archlinux.org"
+favicon = ""
+
+[[bookmark]]
+id = 4
+title = "DuckDuckGo"
+url = "https://duckduckgo.com"
+favicon = ""
+
+[[bookmark]]
+id = 5
+title = "Hacker News"
+url = "https://news.ycombinator.com"
+favicon = ""

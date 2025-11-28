@@ -1,12 +1,10 @@
-# Testing Checklist for Lua Implementation
+# Testing Checklist for TOML Implementation
 
-Use this checklist to verify the Lua-only implementation works correctly.
+Use this checklist to verify the TOML-based implementation works correctly.
 
 ## Prerequisites Check
 
 - [ ] Lua 5.4+ installed: `lua -v`
-- [ ] luarocks installed: `luarocks --version`
-- [ ] lsqlite3 installed: `lua -e "require('lsqlite3')"`
 - [ ] Elephant installed: `which elephant`
 - [ ] Walker installed: `which walker`
 - [ ] curl installed: `which curl`
@@ -14,37 +12,46 @@ Use this checklist to verify the Lua-only implementation works correctly.
 
 ## Installation Test
 
-- [ ] Run `./scripts/install-lua-deps.sh`
-  - [ ] lsqlite3 installs successfully
-  - [ ] No error messages
-
 - [ ] Run `./scripts/setup-walker-integration.sh`
-  - [ ] Lua dependencies check passes
-  - [ ] Elephant menu installed
+  - [ ] System dependencies check passes
+  - [ ] Empty bookmarks.toml created (if doesn't exist)
+  - [ ] Favicons directory created
+  - [ ] Elephant menu installed to `~/.config/elephant/menus/bookmarks.lua`
   - [ ] Walker config updated
   - [ ] Elephant restarted
+  - [ ] No error messages
 
-## Database Test
+## TOML File Test
 
+- [ ] Check TOML file exists: `ls -la bookmarks.toml`
 - [ ] Run `lua scripts/test-lua-bookmarks.lua`
-  - [ ] Database opens successfully
+  - [ ] TOML file opens successfully
+  - [ ] Can parse TOML content
   - [ ] Can read existing bookmarks
   - [ ] File exists check works
   - [ ] Favicon directory exists
+  - [ ] Bookmark structure validation passes
 
-- [ ] Manually check database:
+- [ ] Manually check TOML file:
   ```bash
-  sqlite3 bookmarks.db ".schema bookmarks"
-  sqlite3 bookmarks.db "SELECT COUNT(*) FROM bookmarks;"
+  cat bookmarks.toml
   ```
+  - [ ] Format is valid TOML
+  - [ ] Each bookmark has `[[bookmark]]` header
+  - [ ] Each bookmark has id, title, url, favicon fields
 
 ## Walker Integration Test
 
-- [ ] Open Walker
+- [ ] Open Walker (your configured keybind, usually `Super+Space`)
 - [ ] Type `!` to filter bookmarks
   - [ ] Bookmarks appear
   - [ ] Favicons display correctly
   - [ ] "Add New Bookmark" entry appears first
+
+- [ ] Test searching without prefix:
+  - [ ] Type part of a bookmark title
+  - [ ] Bookmarks appear in results
+  - [ ] Can switch between different providers
 
 - [ ] Test opening bookmark:
   - [ ] Select a bookmark
@@ -56,7 +63,7 @@ Use this checklist to verify the Lua-only implementation works correctly.
   - [ ] Press Ctrl+X
   - [ ] Confirmation notification appears
   - [ ] Bookmark removed from list
-  - [ ] Database updated: `sqlite3 bookmarks.db "SELECT COUNT(*) FROM bookmarks;"`
+  - [ ] TOML file updated: `cat bookmarks.toml | grep -c "[[bookmark]]"`
 
 ## Add Bookmark Test
 
@@ -64,80 +71,182 @@ Use this checklist to verify the Lua-only implementation works correctly.
 - [ ] Open Walker and select "Add New Bookmark"
   - [ ] URL pre-filled from clipboard
   - [ ] Title dialog appears
-  - [ ] Description dialog appears (optional)
-  - [ ] Tags dialog appears (optional)
   - [ ] Success notification appears
-  - [ ] Bookmark appears in Walker
+  - [ ] Bookmark appears in Walker immediately
   - [ ] Favicon downloaded (check `favicons/` directory)
+  - [ ] TOML file updated: `cat bookmarks.toml`
+
+- [ ] Test adding bookmark without clipboard:
+  - [ ] Clear clipboard or copy non-URL
+  - [ ] Select "Add New Bookmark"
+  - [ ] URL input dialog appears
+  - [ ] Enter URL manually
+  - [ ] Bookmark saves successfully
 
 ## Favicon Test
 
-- [ ] Add bookmark with new domain
-- [ ] Check `favicons/` directory for `domain.png`
+- [ ] Add bookmark with new domain (e.g., `https://github.com`)
+- [ ] Check `favicons/` directory for `github.com.png`
 - [ ] Verify favicon shows in Walker
-- [ ] Try opening bookmark with favicon
-- [ ] Check that existing favicons are reused (no re-download)
+- [ ] Add another bookmark from same domain
+- [ ] Verify favicon is reused (no re-download)
+- [ ] Check that bookmark without favicon still works
+
+## Manual Editing Test
+
+- [ ] Open `bookmarks.toml` in text editor
+- [ ] Manually add a bookmark:
+  ```toml
+  [[bookmark]]
+  id = 999
+  title = "Test Bookmark"
+  url = "https://test.example.com"
+  favicon = ""
+  ```
+- [ ] Save file
+- [ ] Restart Elephant: `killall elephant && elephant &`
+- [ ] Open Walker
+- [ ] Verify manual bookmark appears
+
+- [ ] Edit an existing bookmark title
+- [ ] Restart Elephant
+- [ ] Verify changes appear in Walker
 
 ## Performance Test
 
-Run this simple benchmark:
+Add several bookmarks and test responsiveness:
 
 ```bash
-time for i in {1..10}; do
-  sqlite3 bookmarks.db "SELECT * FROM bookmarks LIMIT 10;" > /dev/null
+# Add 10 bookmarks quickly
+for i in {1..10}; do
+  echo "[[bookmark]]
+id = $i
+title = \"Test Bookmark $i\"
+url = \"https://example$i.com\"
+favicon = \"\"
+" >> bookmarks.toml
 done
 ```
 
-Should complete in < 100ms total (~10ms per iteration).
+- [ ] Restart Elephant
+- [ ] Open Walker and search bookmarks
+- [ ] Should be instant (< 50ms)
+- [ ] No lag or delay
+
+Clean up test bookmarks:
+```bash
+# Remove test bookmarks manually or reset the file
+```
 
 ## Error Handling Test
 
 - [ ] Try adding duplicate URL
   - [ ] Error notification appears
+  - [ ] No duplicate entry in TOML file
   - [ ] No crash
 
 - [ ] Try deleting non-existent bookmark
   - [ ] Graceful handling
-  - [ ] Error notification
+  - [ ] Error notification or silent failure
+  - [ ] No corruption of TOML file
 
 - [ ] Test with no clipboard content
   - [ ] Input dialog appears with empty/placeholder
+  - [ ] Can enter URL manually
 
-- [ ] Test with invalid URL
+- [ ] Test with invalid URL format
   - [ ] Validation or graceful handling
+  - [ ] Can re-enter correct URL
+
+- [ ] Test with corrupted TOML file
+  - [ ] Create backup first
+  - [ ] Add invalid syntax to TOML file
+  - [ ] Check Elephant doesn't crash
+  - [ ] Restore from backup
 
 ## Elephant/Walker Integration Test
 
 - [ ] Restart Elephant: `killall elephant && elephant &`
-- [ ] Check Elephant logs: `journalctl -f | grep elephant`
+- [ ] Verify Elephant is running: `pgrep elephant`
+- [ ] Check for Lua errors in system logs (if available)
   - [ ] No Lua errors
   - [ ] bookmarks.lua loads successfully
 
 - [ ] Restart Walker (if applicable)
 - [ ] Verify bookmarks still appear
 
-## Migration Test (if upgrading from Node.js version)
+- [ ] Check Elephant menu file:
+  ```bash
+  cat ~/.config/elephant/menus/bookmarks.lua | grep "TOML"
+  ```
+  - [ ] TOML parser code is present
+  - [ ] No references to SQLite/lsqlite3
 
-- [ ] Existing bookmarks preserved
-- [ ] Existing favicons preserved
+## File Permissions Test
+
+- [ ] Check TOML file permissions: `ls -la bookmarks.toml`
+  - [ ] File is readable and writable by user
+  
+- [ ] Check favicons directory: `ls -la favicons/`
+  - [ ] Directory is writable by user
+  - [ ] Favicon files are readable
+
+## Backup and Restore Test
+
+- [ ] Create backup: `cp bookmarks.toml bookmarks.backup.toml`
+- [ ] Add a test bookmark via Walker
+- [ ] Restore from backup: `cp bookmarks.backup.toml bookmarks.toml`
+- [ ] Restart Elephant
+- [ ] Verify test bookmark is gone
+- [ ] Verify original bookmarks are intact
+
+## Migration Test (if upgrading from SQLite version)
+
+- [ ] If `bookmarks.db` exists, bookmarks can be migrated
+- [ ] Run migration command (see LUA_IMPLEMENTATION.md)
+- [ ] All bookmarks transferred to TOML
+- [ ] Favicons preserved
 - [ ] No data loss
 - [ ] All URLs still open correctly
+- [ ] Can safely delete old `bookmarks.db` file
 
-## Cleanup Test
+## Multi-line and Special Characters Test
 
-- [ ] Lua path set in shell RC file
-  - [ ] `eval $(luarocks path --lua-version 5.4)` in `~/.bashrc` or `~/.zshrc`
-- [ ] Test in new shell session
-  - [ ] Open new terminal
-  - [ ] Run `lua -e "require('lsqlite3')"`
-  - [ ] Should work without manual path setup
+- [ ] Add bookmark with special characters in title:
+  - [ ] Title with quotes: `My "Favorite" Site`
+  - [ ] Title with emoji: `🔖 Bookmarks Manager`
+  - [ ] Title with ampersand: `Q&A Site`
+  
+- [ ] Verify they save correctly in TOML
+- [ ] Verify they display correctly in Walker
+- [ ] Verify they can be deleted
+
+## Edge Cases Test
+
+- [ ] Add bookmark with very long title (100+ characters)
+  - [ ] Saves correctly
+  - [ ] Displays (possibly truncated) in Walker
+  
+- [ ] Add bookmark with very long URL (500+ characters)
+  - [ ] Saves correctly
+  - [ ] Opens correctly
+  
+- [ ] Add bookmark with international characters
+  - [ ] Title: `日本語 Chinese Русский العربية`
+  - [ ] Saves and displays correctly
+
+- [ ] Test with empty bookmarks file
+  - [ ] Create empty `bookmarks.toml`
+  - [ ] Restart Elephant
+  - [ ] Only "Add New Bookmark" appears
+  - [ ] Can add first bookmark successfully
 
 ## Documentation Test
 
-- [ ] README.md accurate
-- [ ] LUA_IMPLEMENTATION.md comprehensive
-- [ ] MIGRATION_GUIDE.md helpful
-- [ ] WALKER_INTEGRATION.md up to date
+- [ ] README.md accurate and up-to-date
+- [ ] LUA_IMPLEMENTATION.md reflects TOML implementation
+- [ ] WALKER_INTEGRATION.md still relevant
+- [ ] No references to SQLite in docs
 
 ## Final Verification
 
@@ -145,6 +254,9 @@ Should complete in < 100ms total (~10ms per iteration).
 - [ ] No error messages
 - [ ] Performance is fast
 - [ ] User experience is smooth
+- [ ] TOML files are human-readable
+- [ ] Easy to backup and restore
+- [ ] No external Lua dependencies required
 - [ ] Ready for daily use!
 
 ---
@@ -161,6 +273,15 @@ Record any issues or observations here:
 
 - **Tested by**: _______________
 - **Date**: _______________
-- **Version**: `feat/lua-only-refactor`
+- **Version**: TOML implementation
 - **Status**: [ ] Pass [ ] Fail
 
+## Comparison with SQLite Version
+
+Benefits observed:
+- [ ] Simpler installation (no luarocks/lsqlite3)
+- [ ] Bookmarks are human-readable
+- [ ] Easy to manually edit/backup
+- [ ] No Elephant compatibility issues
+- [ ] Faster or same performance
+- [ ] No database corruption risk
