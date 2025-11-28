@@ -2,53 +2,117 @@ Name = "bookmarks"
 NamePretty = "Bookmarks"
 Icon = "bookmark"
 Actions = {
-	open = "/usr/bin/xdg-open %VALUE%",
+	open = "lua:OpenBookmark",
 	delete = "lua:DeleteBookmark",
 }
 Cache = false
 Description = "Manage and open bookmarks"
 
--- Load lsqlite3
-local sqlite3 = require("lsqlite3")
-
 -- Constants
 local HOME = os.getenv("HOME")
 local PROJECT_PATH = HOME .. "{{PROJECT_PATH}}"
-local DB_PATH = PROJECT_PATH .. "/bookmarks.db"
+local BOOKMARKS_FILE = PROJECT_PATH .. "/bookmarks.toml"
 local FAVICON_DIR = PROJECT_PATH .. "/favicons"
 
--- Database connection
-local db = nil
+-- TOML Parser (simple implementation for our use case)
+local function parseTOML(content)
+	local bookmarks = {}
+	local current = nil
 
--- Helper: Initialize database
-local function initDatabase()
-	db = sqlite3.open(DB_PATH)
-	if not db then
-		return nil
+	for line in content:gmatch("[^\r\n]+") do
+		line = line:match("^%s*(.-)%s*$") -- trim
+
+		if line:match("^%[%[bookmark%]%]$") then
+			if current then
+				table.insert(bookmarks, current)
+			end
+			current = {}
+		elseif current and line ~= "" and not line:match("^#") then
+			local key, value = line:match("^([%w_]+)%s*=%s*(.+)$")
+			if key and value then
+				-- Remove quotes from strings
+				if value:match('^".*"$') or value:match("^'.*'$") then
+					value = value:sub(2, -2)
+				end
+				-- Convert to number if it's a number
+				if tonumber(value) then
+					value = tonumber(value)
+				end
+				current[key] = value
+			end
+		end
 	end
 
-	-- Enable WAL mode
-	db:exec("PRAGMA journal_mode = WAL")
+	if current then
+		table.insert(bookmarks, current)
+	end
 
-	-- Create tables if they don't exist
-	db:exec([[
-    CREATE TABLE IF NOT EXISTS bookmarks (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      url TEXT NOT NULL UNIQUE,
-      description TEXT,
-      tags TEXT,
-      favicon TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+	return bookmarks
+end
 
-    CREATE INDEX IF NOT EXISTS idx_bookmarks_title ON bookmarks(title);
-    CREATE INDEX IF NOT EXISTS idx_bookmarks_tags ON bookmarks(tags);
-    CREATE INDEX IF NOT EXISTS idx_bookmarks_created ON bookmarks(created_at);
-  ]])
+-- TOML Writer
+local function writeTOML(bookmarks)
+	local lines = {}
 
-	return db
+	for _, bookmark in ipairs(bookmarks) do
+		table.insert(lines, "[[bookmark]]")
+		table.insert(lines, "id = " .. tostring(bookmark.id))
+		table.insert(lines, "title = \"" .. bookmark.title:gsub('"', '\\"') .. "\"")
+		table.insert(lines, "url = \"" .. bookmark.url:gsub('"', '\\"') .. "\"")
+		if bookmark.favicon and bookmark.favicon ~= "" then
+			table.insert(lines, "favicon = \"" .. bookmark.favicon:gsub('"', '\\"') .. "\"")
+		else
+			table.insert(lines, "favicon = \"\"")
+		end
+		table.insert(lines, "")
+	end
+
+	return table.concat(lines, "\n")
+end
+
+-- Helper: Read bookmarks from TOML file
+local function readBookmarks()
+	local file = io.open(BOOKMARKS_FILE, "r")
+	if not file then
+		return {}
+	end
+
+	local content = file:read("*all")
+	file:close()
+
+	if not content or content == "" then
+		return {}
+	end
+
+	return parseTOML(content)
+end
+
+-- Helper: Write bookmarks to TOML file
+local function writeBookmarks(bookmarks)
+	-- Ensure directory exists
+	os.execute("mkdir -p '" .. PROJECT_PATH .. "' 2>/dev/null")
+
+	local file = io.open(BOOKMARKS_FILE, "w")
+	if not file then
+		return false
+	end
+
+	local content = writeTOML(bookmarks)
+	file:write(content)
+	file:close()
+
+	return true
+end
+
+-- Helper: Get next available ID
+local function getNextId(bookmarks)
+	local maxId = 0
+	for _, bookmark in ipairs(bookmarks) do
+		if bookmark.id and bookmark.id > maxId then
+			maxId = bookmark.id
+		end
+	end
+	return maxId + 1
 end
 
 -- Helper: Check if file exists
@@ -73,12 +137,12 @@ end
 local function downloadFavicon(url)
 	local urlObj = url:match("^(https?://[^/]+)")
 	if not urlObj then
-		return nil
+		return ""
 	end
 
 	local domain = urlObj:match("://([^/:]+)")
 	if not domain then
-		return nil
+		return ""
 	end
 
 	ensureDir(FAVICON_DIR)
@@ -110,7 +174,7 @@ local function downloadFavicon(url)
 		end
 	end
 
-	return nil
+	return ""
 end
 
 -- Helper: Get clipboard content
@@ -124,10 +188,11 @@ local function getClipboard()
 	return content and content:match("^%s*(.-)%s*$") or nil
 end
 
--- Helper: Show input dialog
+-- Helper: Show input dialog using Walker dmenu mode
 local function showInput(prompt, default)
 	default = default or ""
-	local cmd = string.format("rofi -dmenu -p '%s' -theme-str 'entry { placeholder: \"%s\"; }'", prompt, default)
+	-- Use Walker's dmenu mode for input
+	local cmd = string.format("echo '%s' | walker --dmenu", default)
 	local handle = io.popen(cmd)
 	if not handle then
 		return nil
@@ -137,122 +202,76 @@ local function showInput(prompt, default)
 	return result and result:match("^%s*(.-)%s*$") or nil
 end
 
--- Helper: Get all bookmarks
-local function getAllBookmarks()
-	local bookmarks = {}
-	if not db then
-		db = initDatabase()
-	end
-	if not db then
-		return bookmarks
-	end
-
-	for row in db:nrows("SELECT * FROM bookmarks ORDER BY created_at DESC") do
-		table.insert(bookmarks, {
-			id = row.id,
-			title = row.title,
-			url = row.url,
-			description = row.description,
-			tags = row.tags,
-			favicon = row.favicon,
-		})
-	end
-
-	return bookmarks
-end
-
 -- Helper: Add bookmark
-local function addBookmark(url, title, description, tags)
-	if not db then
-		db = initDatabase()
-	end
-	if not db then
-		return false, "Database not initialized"
+local function addBookmark(url, title)
+	local bookmarks = readBookmarks()
+
+	-- Check if URL already exists
+	for _, bookmark in ipairs(bookmarks) do
+		if bookmark.url == url then
+			return false, "URL already exists"
+		end
 	end
 
 	-- Download favicon
 	local favicon = downloadFavicon(url)
 
-	local stmt = db:prepare([[
-    INSERT INTO bookmarks (title, url, description, tags, favicon)
-    VALUES (?, ?, ?, ?, ?)
-  ]])
+	-- Create new bookmark
+	local newBookmark = {
+		id = getNextId(bookmarks),
+		title = title,
+		url = url,
+		favicon = favicon,
+	}
 
-	if not stmt then
-		return false, "Failed to prepare statement"
-	end
+	table.insert(bookmarks, newBookmark)
 
-	stmt:bind_values(title, url, description or "", tags or "", favicon or "")
-	local result = stmt:step()
-	stmt:finalize()
+	-- Write back to file
+	local success = writeBookmarks(bookmarks)
 
-	if result == sqlite3.DONE then
+	if success then
 		return true
 	else
-		return false, "Failed to insert bookmark"
+		return false, "Failed to write bookmarks file"
 	end
 end
 
 -- Helper: Delete bookmark by ID
 local function deleteBookmark(id)
-	if not db then
-		db = initDatabase()
+	local bookmarks = readBookmarks()
+	local found = false
+
+	for i, bookmark in ipairs(bookmarks) do
+		if bookmark.id == id then
+			table.remove(bookmarks, i)
+			found = true
+			break
+		end
 	end
-	if not db then
+
+	if not found then
 		return false
 	end
 
-	local stmt = db:prepare("DELETE FROM bookmarks WHERE id = ?")
-	if not stmt then
-		return false
-	end
-
-	stmt:bind_values(id)
-	local result = stmt:step()
-	stmt:finalize()
-
-	return result == sqlite3.DONE
+	return writeBookmarks(bookmarks)
 end
 
 -- Helper: Get bookmark by ID
 local function getBookmarkById(id)
-	if not db then
-		db = initDatabase()
-	end
-	if not db then
-		return nil
+	local bookmarks = readBookmarks()
+
+	for _, bookmark in ipairs(bookmarks) do
+		if bookmark.id == id then
+			return bookmark
+		end
 	end
 
-	local stmt = db:prepare("SELECT * FROM bookmarks WHERE id = ?")
-	if not stmt then
-		return nil
-	end
-
-	stmt:bind_values(id)
-	if stmt:step() == sqlite3.ROW then
-		local bookmark = {
-			id = stmt:get_value(0),
-			title = stmt:get_value(1),
-			url = stmt:get_value(2),
-			description = stmt:get_value(3),
-			tags = stmt:get_value(4),
-			favicon = stmt:get_value(5),
-		}
-		stmt:finalize()
-		return bookmark
-	end
-	stmt:finalize()
 	return nil
 end
 
 -- Walker function: Get entries for display
 function GetEntries()
 	local entries = {}
-
-	-- Initialize database
-	if not db then
-		db = initDatabase()
-	end
 
 	-- Add "Add New Bookmark" entry first
 	table.insert(entries, {
@@ -266,28 +285,52 @@ function GetEntries()
 	})
 
 	-- Get all bookmarks
-	local bookmarks = getAllBookmarks()
+	local bookmarks = readBookmarks()
 
 	for _, bookmark in ipairs(bookmarks) do
 		local icon = "text-html"
-		if bookmark.favicon and fileExists(bookmark.favicon) then
+		if bookmark.favicon and bookmark.favicon ~= "" and fileExists(bookmark.favicon) then
 			icon = bookmark.favicon
-		end
-
-		local subtext = bookmark.description
-		if not subtext or subtext == "" then
-			subtext = bookmark.url
 		end
 
 		table.insert(entries, {
 			Text = bookmark.title,
-			Subtext = subtext,
+			Subtext = bookmark.url,
 			Value = "bookmark:" .. bookmark.id .. ":" .. bookmark.url,
 			Icon = icon,
 		})
 	end
 
 	return entries
+end
+
+-- Walker action: Open bookmark
+function OpenBookmark(value, args)
+	local url = value:match("^bookmark:%d+:(.+)$")
+
+	if not url then
+		os.execute("notify-send 'Error' 'Could not extract URL'")
+		return
+	end
+
+	-- Get default browser
+	local handle = io.popen("xdg-settings get default-web-browser 2>/dev/null")
+	local default_browser = nil
+	if handle then
+		default_browser = handle:read("*a")
+		handle:close()
+		default_browser = default_browser and default_browser:match("^%s*(.-)%s*$")
+	end
+
+	-- Open with default browser
+	if default_browser and default_browser ~= "" then
+		-- Extract desktop file name without .desktop extension
+		local browser_name = default_browser:match("(.+)%.desktop$") or default_browser
+		os.execute(string.format("gtk-launch '%s' '%s' 2>/dev/null &", default_browser, url))
+	else
+		-- Fallback to xdg-open
+		os.execute(string.format("xdg-open '%s' 2>/dev/null &", url))
+	end
 end
 
 -- Walker action: Delete bookmark
@@ -315,13 +358,16 @@ end
 
 -- Walker action: Add bookmark
 function AddBookmark(value, args)
-	-- Get URL from clipboard or input
-	local url = getClipboard()
+	-- Get URL from clipboard if it's valid, otherwise use empty default
+	local clipboard = getClipboard()
+	local default_url = ""
 
-	-- Validate or ask for URL
-	if not url or not url:match("^https?://") then
-		url = showInput("Enter URL", url or "https://")
+	if clipboard and clipboard:match("^https?://") then
+		default_url = clipboard
 	end
+
+	-- Always ask for URL, pre-fill with clipboard if valid
+	local url = showInput("Enter URL", default_url ~= "" and default_url or "https://")
 
 	if not url or url == "" or not url:match("^https?://") then
 		os.execute("notify-send 'Cancelled' 'No valid URL provided'")
@@ -334,14 +380,8 @@ function AddBookmark(value, args)
 		title = url
 	end
 
-	-- Get description (optional)
-	local description = showInput("Enter description (optional)", "")
-
-	-- Get tags (optional)
-	local tags = showInput("Enter tags (optional, comma-separated)", "")
-
 	-- Add the bookmark
-	local success, err = addBookmark(url, title, description, tags)
+	local success, err = addBookmark(url, title)
 
 	if success then
 		os.execute(string.format("notify-send '✅ Bookmark Added' '%s'", title))

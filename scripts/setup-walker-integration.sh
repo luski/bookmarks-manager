@@ -15,14 +15,12 @@ CONFIG_DIR="$PROJECT_ROOT/config"
 
 echo -e "${GREEN}=== Bookmarks Manager - Walker Integration Setup ===${NC}\n"
 
-# Check if Lua dependencies are installed
-echo -e "${GREEN}Checking Lua dependencies...${NC}"
-if ! lua -e "require('lsqlite3')" 2>/dev/null; then
-    echo -e "${YELLOW}lsqlite3 not found. Installing Lua dependencies...${NC}"
-    "$SCRIPT_DIR/install-lua-deps.sh"
+# Check if npm dependencies are installed (needed for Walker config merge)
+if [ ! -d "$PROJECT_ROOT/node_modules" ]; then
+    echo -e "${YELLOW}Installing npm dependencies for setup...${NC}"
+    cd "$PROJECT_ROOT"
+    npm install
     echo ""
-else
-    echo -e "  ✓ lsqlite3 found"
 fi
 
 # Check if Elephant is installed
@@ -39,6 +37,18 @@ if ! command -v walker &> /dev/null; then
     exit 1
 fi
 
+# Check for required tools
+echo -e "${GREEN}Checking system dependencies...${NC}"
+
+if ! command -v curl &> /dev/null; then
+    echo -e "${RED}Error: curl is not installed.${NC}"
+    echo "Please install curl: sudo pacman -S curl"
+    exit 1
+fi
+echo -e "  ✓ curl found"
+
+
+
 # Create Elephant menus directory if it doesn't exist
 ELEPHANT_MENUS_DIR="$HOME/.config/elephant/menus"
 if [ ! -d "$ELEPHANT_MENUS_DIR" ]; then
@@ -52,21 +62,29 @@ cp "$CONFIG_DIR/bookmarks.lua" "$ELEPHANT_MENUS_DIR/bookmarks.lua"
 echo -e "  ✓ Copied to $ELEPHANT_MENUS_DIR/bookmarks.lua"
 
 # Update paths in the Lua file to use current project location
-sed -i "s|HOME .. \"{{PROJECT_PATH}}\"|HOME .. \"$PROJECT_ROOT\"|g" "$ELEPHANT_MENUS_DIR/bookmarks.lua"
-echo -e "  ✓ Updated paths to: $PROJECT_ROOT"
+# Convert absolute path to relative from HOME
+RELATIVE_PATH="${PROJECT_ROOT/#$HOME/}"
+sed -i "s|HOME .. \"{{PROJECT_PATH}}\"|HOME .. \"$RELATIVE_PATH\"|g" "$ELEPHANT_MENUS_DIR/bookmarks.lua"
+echo -e "  ✓ Updated paths to: ~$RELATIVE_PATH"
 
-# Ensure Lua can find lsqlite3 by updating Elephant's environment
-ELEPHANT_ENV="$HOME/.config/elephant/env.sh"
-if [ ! -f "$ELEPHANT_ENV" ]; then
-    mkdir -p "$(dirname "$ELEPHANT_ENV")"
-    echo '#!/bin/bash' > "$ELEPHANT_ENV"
-    echo 'eval $(luarocks path --lua-version 5.4)' >> "$ELEPHANT_ENV"
-    echo -e "  ✓ Created Elephant environment file"
+# Create bookmarks.toml if it doesn't exist
+BOOKMARKS_FILE="$PROJECT_ROOT/bookmarks.toml"
+if [ ! -f "$BOOKMARKS_FILE" ]; then
+    echo -e "${YELLOW}Creating empty bookmarks file...${NC}"
+    touch "$BOOKMARKS_FILE"
+    echo -e "  ✓ Created $BOOKMARKS_FILE"
 else
-    if ! grep -q "luarocks path" "$ELEPHANT_ENV"; then
-        echo 'eval $(luarocks path --lua-version 5.4)' >> "$ELEPHANT_ENV"
-        echo -e "  ✓ Updated Elephant environment file"
-    fi
+    echo -e "  ✓ Bookmarks file already exists"
+fi
+
+# Create favicons directory if it doesn't exist
+FAVICON_DIR="$PROJECT_ROOT/favicons"
+if [ ! -d "$FAVICON_DIR" ]; then
+    echo -e "${YELLOW}Creating favicons directory...${NC}"
+    mkdir -p "$FAVICON_DIR"
+    echo -e "  ✓ Created $FAVICON_DIR"
+else
+    echo -e "  ✓ Favicons directory already exists"
 fi
 
 # Walker configuration
@@ -100,10 +118,10 @@ echo "  4. Press Enter on a bookmark to open it"
 echo "  5. Press Ctrl+X on a bookmark to delete it"
 echo "  6. Select 'Add New Bookmark' to add a new bookmark"
 echo ""
+echo "Bookmarks are stored in: $BOOKMARKS_FILE"
 echo ""
 echo "Troubleshooting:"
 echo "  - Check Elephant is running: pgrep elephant"
 echo "  - Restart Elephant: killall elephant && elephant &"
-echo "  - Check database: sqlite3 $PROJECT_ROOT/bookmarks.db '.tables'"
-echo "  - Ensure Lua path is set: eval \$(luarocks path --lua-version 5.4)"
+echo "  - View bookmarks: cat $BOOKMARKS_FILE"
 echo ""
