@@ -1,7 +1,10 @@
 Name = "bookmarks"
 NamePretty = "Bookmarks"
 Icon = "bookmark"
-Action = "/usr/bin/xdg-open %VALUE%"
+Actions = {
+	open = "/usr/bin/xdg-open %VALUE%",
+	delete = "lua:DeleteBookmark",
+}
 Cache = false
 Description = "Manage and open bookmarks"
 

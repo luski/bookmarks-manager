@@ -54,76 +54,11 @@ sed -i "s|HOME .. \"/projects/private/bookmarks|HOME .. \"$PROJECT_ROOT|g" "$ELE
 echo -e "  ✓ Updated paths to: $PROJECT_ROOT"
 
 # Walker configuration
-WALKER_CONFIG="$HOME/.config/walker/config.toml"
 WALKER_CONFIG_DIR="$HOME/.config/walker"
-
 mkdir -p "$WALKER_CONFIG_DIR"
 
-# Backup existing config if it exists
-if [ -f "$WALKER_CONFIG" ]; then
-    cp "$WALKER_CONFIG" "$WALKER_CONFIG.backup.$(date +%s)"
-    echo -e "${GREEN}Configuring Walker...${NC}"
-    echo -e "  ✓ Backed up existing Walker config"
-fi
-
-# Check if bookmarks is already configured
-if [ -f "$WALKER_CONFIG" ] && grep -q 'menus:bookmarks' "$WALKER_CONFIG"; then
-    echo -e "  ${YELLOW}⚠${NC}  Bookmarks already configured in Walker"
-else
-    # Check if Walker config exists and has providers section
-    if [ -f "$WALKER_CONFIG" ]; then
-        # Existing config - only add what's needed
-        echo -e "${GREEN}Configuring Walker...${NC}"
-
-        # Add to default providers if section exists
-        if grep -q '^default = \[' "$WALKER_CONFIG"; then
-            # Add bookmarks to the default array
-            sed -i '/^default = \[/,/^\]/ {
-                /^\]/ i\  "menus:bookmarks",
-            }' "$WALKER_CONFIG"
-            echo -e "  ✓ Added bookmarks to existing Walker default providers"
-        elif grep -q '^\[providers\]' "$WALKER_CONFIG"; then
-            # Has [providers] but no default array - add it after [providers]
-            sed -i '/^\[providers\]/a default = [\n  "menus:bookmarks",\n]' "$WALKER_CONFIG"
-            echo -e "  ✓ Added default providers array with bookmarks"
-        else
-            # No providers section at all - append it
-            cat >> "$WALKER_CONFIG" << 'EOF'
-
-[providers]
-default = [
-  "menus:bookmarks",
-]
-EOF
-            echo -e "  ✓ Added providers section with bookmarks"
-        fi
-
-        # Add prefix configuration if not already there
-        if ! grep -q 'provider = "menus:bookmarks"' "$WALKER_CONFIG"; then
-            cat >> "$WALKER_CONFIG" << 'EOF'
-
-[[providers.prefixes]]
-prefix = "!"
-provider = "menus:bookmarks"
-EOF
-            echo -e "  ✓ Added bookmark prefix (!) to Walker"
-        fi
-    else
-        # No config file exists - create minimal one with just bookmarks
-        echo -e "${YELLOW}Walker config not found. Creating minimal config...${NC}"
-        cat > "$WALKER_CONFIG" << 'EOF'
-[providers]
-default = [
-  "menus:bookmarks",
-]
-
-[[providers.prefixes]]
-prefix = "!"
-provider = "menus:bookmarks"
-EOF
-        echo -e "  ✓ Created Walker configuration with bookmarks"
-    fi
-fi
+echo -e "${GREEN}Configuring Walker...${NC}"
+node "$SCRIPT_DIR/merge-walker-config.mjs"
 
 # Restart Elephant if it's running
 if pgrep -x elephant > /dev/null; then
