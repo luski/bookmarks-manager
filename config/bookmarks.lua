@@ -277,6 +277,17 @@ function GetEntries()
 	-- Get all bookmarks
 	local bookmarks = readBookmarks()
 
+	-- If no bookmarks, show placeholder
+	if #bookmarks == 0 then
+		table.insert(entries, {
+			Text = "No bookmarks yet",
+			Subtext = "Press Ctrl+A to add your first bookmark",
+			Value = "empty:placeholder",
+			Icon = "bookmark",
+		})
+		return entries
+	end
+
 	for _, bookmark in ipairs(bookmarks) do
 		local icon = "text-html"
 		if bookmark.favicon and bookmark.favicon ~= "" and fileExists(bookmark.favicon) then
