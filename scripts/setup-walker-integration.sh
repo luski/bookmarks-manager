@@ -15,6 +15,13 @@ CONFIG_DIR="$PROJECT_ROOT/config"
 
 echo -e "${GREEN}=== Bookmarks Manager - Walker Integration Setup ===${NC}\n"
 
+# Detect Lua version
+LUA_VERSION=$(lua -v 2>&1 | grep -oP '(?<=Lua )\d+\.\d+' | head -1)
+if [ -z "$LUA_VERSION" ]; then
+    echo -e "${YELLOW}Warning: Could not detect Lua version, defaulting to 5.4${NC}"
+    LUA_VERSION="5.4"
+fi
+
 # Check if npm dependencies are installed (needed for Walker config merge)
 if [ ! -d "$PROJECT_ROOT/node_modules" ]; then
     echo -e "${YELLOW}Installing npm dependencies for setup...${NC}"
@@ -27,13 +34,13 @@ fi
 echo -e "${GREEN}Checking Lua dependencies...${NC}"
 
 # Set up Lua paths first to detect locally installed rocks
-eval $(luarocks path --lua-version 5.4 2>/dev/null) || true
+eval $(luarocks path --lua-version $LUA_VERSION 2>/dev/null) || true
 
 if ! lua -e "require('lsqlite3')" 2>/dev/null; then
     echo -e "${YELLOW}lsqlite3 not found. Installing Lua dependencies...${NC}"
     "$SCRIPT_DIR/install-lua-deps.sh"
     # Reload Lua paths after installation
-    eval $(luarocks path --lua-version 5.4)
+    eval $(luarocks path --lua-version $LUA_VERSION)
     echo ""
 else
     echo -e "  ✓ lsqlite3 found"
@@ -119,5 +126,5 @@ echo "Troubleshooting:"
 echo "  - Check Elephant is running: pgrep elephant"
 echo "  - Restart Elephant: killall elephant && elephant &"
 echo "  - Check database: sqlite3 $PROJECT_ROOT/bookmarks.db '.tables'"
-echo "  - Ensure Lua path is set: eval \$(luarocks path --lua-version 5.4)"
+echo "  - Ensure Lua path is set: eval \$(luarocks path --lua-version $LUA_VERSION)"
 echo ""

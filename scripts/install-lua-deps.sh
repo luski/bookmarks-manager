@@ -20,10 +20,18 @@ if ! command -v luarocks &> /dev/null; then
     exit 1
 fi
 
+# Detect Lua version
+LUA_VERSION=$(lua -v 2>&1 | grep -oP '(?<=Lua )\d+\.\d+' | head -1)
+if [ -z "$LUA_VERSION" ]; then
+    echo -e "${YELLOW}Warning: Could not detect Lua version, defaulting to 5.4${NC}"
+    LUA_VERSION="5.4"
+fi
+
 echo -e "${GREEN}Installing lsqlite3...${NC}"
+echo -e "  Detected Lua version: $LUA_VERSION"
 
 # Set up Lua paths to detect locally installed rocks
-eval $(luarocks path --lua-version 5.4)
+eval $(luarocks path --lua-version $LUA_VERSION)
 
 # Check if already installed
 if lua -e "require('lsqlite3')" 2>/dev/null; then
@@ -44,8 +52,8 @@ echo ""
 echo "To use the Lua dependencies, you need to set up your Lua path."
 echo "Add the following to your shell RC file (~/.bashrc, ~/.zshrc, etc.):"
 echo ""
-echo -e "${YELLOW}eval \$(luarocks path --lua-version 5.4)${NC}"
+echo -e "${YELLOW}eval \$(luarocks path --lua-version $LUA_VERSION)${NC}"
 echo ""
 echo "Or run it in your current shell session:"
-echo -e "${YELLOW}source <(luarocks path --lua-version 5.4)${NC}"
+echo -e "${YELLOW}source <(luarocks path --lua-version $LUA_VERSION)${NC}"
 echo ""
