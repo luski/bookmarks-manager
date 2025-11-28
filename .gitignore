@@ -1,8 +1,24 @@
-node_modules/
-dist/
+# SQLite database files
 *.db
 *.db-shm
 *.db-wal
-*.log
-.env
+
+# Downloaded favicons
 favicons/
+
+# Lua rocks local installation
+.luarocks/
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
