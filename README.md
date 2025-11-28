@@ -18,7 +18,7 @@ A bookmarks management system for Arch Linux with Hyprland integration using Wal
 - Walker
 - curl (for favicon downloads)
 - rofi or dmenu (for input dialogs)
-- Node.js (only required once for initial setup to merge Walker config)
+- Node.js + npm (only required once for initial setup to merge Walker config)
 
 ### Installation
 
@@ -28,9 +28,10 @@ Run the setup script:
 ./scripts/setup-walker-integration.sh
 ```
 
-**Note:** Node.js is only needed during this one-time setup to safely merge the Walker TOML configuration. After setup, the bookmarks manager runs purely in Lua with no Node.js dependency.
+**Note:** Node.js + npm are only needed during this one-time setup to safely merge the Walker TOML configuration. The setup script will automatically install the required npm package (`@iarna/toml`). After setup, the bookmarks manager runs purely in Lua with no Node.js dependency.
 
 This will automatically:
+- ✓ Install npm dependencies for setup (if needed)
 - ✓ Install Lua dependencies (lsqlite3)
 - ✓ Initialize the SQLite database
 - ✓ Install Elephant menu configuration
